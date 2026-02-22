@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Order With Me - ERP</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root { --primary: #2563eb; --secondary: #1e40af; --bg: #f3f4f6; --card: #ffffff; --text: #1f2937; --success: #10b981; --danger: #ef4444; --border: #d1d5db; --warning: #f59e0b;}
+        body.dark-mode { --bg: #111827; --card: #1f2937; --text: #f9fafb; --border: #374151; }
+        body { font-family: 'Poppins', sans-serif; background: var(--bg); margin: 0; padding: 0; color: var(--text); transition: 0.3s; padding-bottom: 30px;}
+        
+        .card { background: var(--card); border-radius: 16px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 15px; border: 1px solid var(--border); overflow: hidden;}
+        .input-field { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px; box-sizing: border-box; font-family: inherit; background: var(--card); color: var(--text); outline: none; transition: 0.3s; }
+        .input-field:focus { border-color: var(--primary); }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; background: var(--primary); color: white; font-weight: 600; cursor: pointer; transition: 0.2s; margin-bottom: 10px; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-success { background: var(--success); }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        
+        /* Screens */
+        #auth-screen { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+        #app-screen { display: none; }
+        .view { display: none; animation: fadeIn 0.3s ease; }
+        .view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Sidebar & Header */
+        .header { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; padding: 15px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: space-between; }
+        .sidebar { position: fixed; top: 0; left: -280px; width: 260px; height: 100vh; background: var(--card); box-shadow: 5px 0 20px rgba(0,0,0,0.2); transition: 0.3s; z-index: 1000; padding: 20px; box-sizing: border-box; overflow-y: auto;}
+        .sidebar.active { left: 0; }
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 999; backdrop-filter: blur(2px); }
+        .overlay.active { display: block; }
+        .menu-item { padding: 12px 15px; border-radius: 10px; font-size: 14px; cursor: pointer; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
+        .menu-item.active-menu { background: var(--primary); color: white; }
+        
+        /* Dashboard */
+        .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .dash-card { background: var(--card); border-radius: 16px; padding: 15px; text-align: center; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        
+        /* Professional Tables */
+        .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 10px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; min-width: 500px; }
+        .data-table th { background: rgba(37, 99, 235, 0.1); padding: 12px; border-bottom: 2px solid var(--border); color: var(--text); white-space: nowrap; }
+        .data-table td { padding: 12px; border-bottom: 1px solid var(--border); color: var(--text); }
+        
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--card); padding: 15px 25px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 3000; display: none; border-left: 5px solid var(--primary); font-weight: bold;}
+
+        /* A5 Billing Design */
+        .bill-container { background: white; color: black; max-width: 500px; margin: 0 auto; padding: 25px; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #ddd; position: relative;}
+        .bill-header { text-align: center; border-bottom: 2px solid #2563eb; padding-bottom: 15px; margin-bottom: 15px; }
+        .bill-header h1 { margin: 0; color: #2563eb; font-size: 24px; text-transform: uppercase; letter-spacing: 1px;}
+        .bill-meta { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 20px; }
+        .bill-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; }
+        .bill-table th { background: #f3f4f6; padding: 8px; text-align: left; border-bottom: 2px solid #000; }
+        .bill-table td { padding: 8px; border-bottom: 1px solid #eee; }
+        .bill-total { text-align: right; font-size: 16px; font-weight: bold; border-top: 2px solid #000; padding-top: 10px; }
+        
+        @media print {
+            body * { visibility: hidden; background: white; }
+            #a5-print-zone, #a5-print-zone * { visibility: visible; }
+            #a5-print-zone { position: absolute; left: 0; top: 0; width: 100%; max-width: 148mm; margin: 0; padding: 0; box-shadow: none; border: none; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toast" class="toast"></div>
+
+    <div id="auth-screen">
+        <div id="login-box" class="card" style="width: 100%; max-width: 380px; text-align: center;">
+            <h2 style="color: var(--primary); margin-bottom: 5px;">Order With Me</h2>
+            <p>Login with username</p>
+            <input type="text" id="loginUsername" class="input-field" placeholder="Username">
+            <input type="password" id="loginPassword" class="input-field" placeholder="Password">
+            <button class="btn btn-success" onclick="loginUser()" id="btnLogin">Login</button>
+            <p style="font-size: 13px;">No account? <span style="color:var(--primary); font-weight:600; cursor:pointer;" onclick="toggleAuthView('reg')">Register here</span></p>
+        </div>
+
+        <div id="reg-box" class="card" style="width: 100%; max-width: 380px; display: none;">
+            <h2 style="text-align: center; color: var(--primary);">New Account</h2>
+            <input type="text" id="regName" class="input-field" placeholder="Full Name">
+            <input type="text" id="regUser" class="input-field" placeholder="Unique Username">
+            <input type="password" id="regPass" class="input-field" placeholder="Password (min 6 chars)">
+            <select id="regRole" class="input-field" onchange="document.getElementById('pinBox').style.display = this.value=='manager'?'block':'none'">
+                <option value="salesman">Salesman</option>
+                <option value="manager">Manager</option>
+            </select>
+            <input type="password" id="pinBox" class="input-field" placeholder="Manager PIN ()" style="display:none;">
+            <button class="btn" onclick="registerUser()" id="btnReg">Create Account</button>
+            <p style="text-align: center; font-size: 13px;">Have account? <span style="color:var(--primary); font-weight:600; cursor:pointer;" onclick="toggleAuthView('login')">Login here</span></p>
+        </div>
+    </div>
+
+    <div id="app-screen">
+        <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+        <div class="sidebar" id="sidebar">
+            <h3 id="sideName" style="margin-top:0;">User</h3>
+            <p id="sideRole" style="font-size:12px; color:gray; text-transform:uppercase; margin-bottom:20px;">Role</p>
+            
+            <div class="menu-item active-menu" id="m-dashboard" onclick="switchView('dashboard')">📊 Dashboard</div>
+            <div class="menu-item" id="m-order" onclick="switchView('order')">🛒 Order Panel</div>
+            <div class="menu-item" id="m-history" onclick="switchView('history')">📜 Live History</div>
+            <div class="menu-item" id="m-billing" onclick="switchView('billing')">🧾 Billing & Invoice</div>
+            
+            <hr style="border:0; border-top:1px solid var(--border); margin:10px 0;">
+            <div style="font-size:11px; font-weight:bold; margin-bottom:5px; color:gray;">BUSINESS LEDGERS</div>
+            
+            <div class="menu-item" id="m-stock" onclick="switchView('stock')">📦 Current Stock</div>
+            <div class="menu-item" id="m-sales" onclick="switchView('sales')" style="display:none;">💰 Sales Ledger</div>
+            <div class="menu-item" id="m-purchase" onclick="switchView('purchase')" style="display:none;">📉 Purchase History</div>
+            
+            <div class="menu-item" id="m-admin" onclick="switchView('admin')" style="display:none; margin-top:10px; border:1px dashed var(--primary);">⚙️ Manager Panel</div>
+            
+            <hr style="border:0; border-top:1px solid var(--border); margin:15px 0;">
+            <div class="menu-item" style="background:var(--bg)">
+                <span>Dark Mode</span>
+                <input type="checkbox" onchange="document.body.classList.toggle('dark-mode')">
+            </div>
+            <button class="btn" onclick="logoutApp()" style="margin-top:20px; background:var(--danger)">Logout</button>
+        </div>
+
+        <div class="header no-print">
+            <div style="display:flex; align-items:center; gap:15px;">
+                <span onclick="toggleMenu()" style="font-size:24px; cursor:pointer;">☰</span>
+                <h3 id="pageTitle" style="margin:0; font-size:18px;">DASHBOARD</h3>
+            </div>
+        </div>
+
+        <div style="padding: 20px;">
+            
+            <div id="view-dashboard" class="view active">
+                <div class="dash-grid">
+                    <div class="dash-card">
+                        <div style="font-size:12px; color:gray;">Total Sales</div>
+                        <div style="font-size:20px; font-weight:bold; color:var(--success);" id="dashTotalSales">₹ 0.00</div>
+                    </div>
+                    <div class="dash-card">
+                        <div style="font-size:12px; color:gray;">Total Orders</div>
+                        <div style="font-size:20px; font-weight:bold; color:var(--primary);" id="dashTotalOrders">0</div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div style="font-weight:bold; margin-bottom:5px; font-size:14px; color:gray;">Top Shop (Highest Billed)</div>
+                    <div id="dashTopShop" style="font-size: 18px; color: var(--secondary); font-weight: bold;">Loading...</div>
+                    <div id="dashTopShopAmount" style="font-size: 13px; color: var(--success); font-weight:600; margin-top:2px;">₹ 0.00</div>
+                </div>
+            </div>
+
+            <div id="view-order" class="view">
+                <div class="card">
+                    <label style="font-size: 12px; font-weight: bold;">Select Shop</label>
+                    <select id="orderShop" class="input-field" style="margin-bottom:0;"><option value="">-- Select Shop --</option></select>
+                </div>
+                <div class="card">
+                    <div style="font-weight:bold; margin-bottom:10px;">Add Items to Cart</div>
+                    <select id="orderItem" class="input-field"><option value="">-- Select Product --</option></select>
+                    <div class="flex-between">
+                        <input type="number" id="orderQty" class="input-field" placeholder="Qty" style="margin-bottom:0; flex:1;">
+                        <button class="btn btn-outline" onclick="addToCart()" style="margin-bottom:0; width:70px; margin-left:10px;">Add</button>
+                        <button class="btn btn-outline" onclick="undoCart()" style="margin-bottom:0; width:75px; margin-left:10px; border-color:var(--warning); color:var(--warning);">Undo</button>
+                    </div>
+                </div>
+                <div class="card" id="cartCard" style="display:none;">
+                    <div style="font-weight:bold; margin-bottom:10px;">Cart Items</div>
+                    <div id="cartList"></div>
+                    <div class="flex-between" style="margin-top:15px; font-weight:bold;">
+                        <span>Total:</span><span id="cartTotal" style="color:var(--primary); font-size:18px;">₹ 0.00</span>
+                    </div>
+                    <button class="btn btn-success" onclick="placeFinalOrder()" id="btnPlace" style="margin-top:15px;" >Place Final Order</button>
+                </div>
+            </div>
+
+            <div id="view-history" class="view">
+                <div id="historyList"><div style="text-align:center; padding:20px;">Loading...</div></div>
+            </div>
+
+            <div id="view-billing" class="view">
+                <div class="card no-print">
+                    <label style="font-size: 12px; font-weight: bold;">Select Order to Generate Bill</label>
+                    <select id="billingSelect" class="input-field" onchange="renderA5Bill()"><option value="">-- Choose an Order --</option></select>
+                </div>
+                <div id="bill-preview-section" style="display:none;">
+                    <div class="flex-between no-print" style="margin-bottom: 15px;">
+                        <button class="btn btn-outline" onclick="window.print()" style="margin-bottom:0; flex:1;">🖨️ Print</button>
+                        <button class="btn btn-success" onclick="downloadA5PDF()" style="margin-bottom:0; flex:1; margin-left:10px;">💾 Save PDF</button>
+                    </div>
+                    <div id="a5-print-zone" class="bill-container">
+                        <div class="bill-header">
+                            <h1>Order With Me</h1>
+                            <p>Official Retail Invoice</p>
+                        </div>
+                        <div class="bill-meta">
+                            <div>
+                                <strong>Billed To:</strong> <br>
+                                <span id="b-shopName">Shop Name</span><br>
+                                <span id="b-shopPhone" style="color:#666;">Phone</span>
+                            </div>
+                            <div style="text-align:right;">
+                                <strong>Date:</strong> <span id="b-date">DD/MM/YYYY</span><br>
+                                <strong>Sales Rep:</strong> <span id="b-salesman">Name</span><br>
+                                <strong>Bill No:</strong> <span id="b-orderId">#0000</span>
+                            </div>
+                        </div>
+                        <table class="bill-table">
+                            <thead>
+                                <tr><th style="width: 10%;">Sl</th><th style="width: 50%;">Description</th><th style="width: 15%;">Qty</th><th style="width: 25%; text-align:right;">Amount</th></tr>
+                            </thead>
+                            <tbody id="b-itemsBody"></tbody>
+                        </table>
+                        <div class="bill-total">
+                            Grand Total: ₹ <span id="b-grandTotal">0.00</span>
+                        </div>
+                        <div class="bill-footer">
+                            <p>Computer generated invoice. No signature required.</p>
+                            <p>Thank you for your business!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-stock" class="view">
+                <div class="flex-between" style="margin-bottom:10px;">
+                    <div>
+                        <h3 style="margin:0; font-size:16px;">Inventory Status</h3>
+                        <div style="font-size:14px; font-weight:bold; color:var(--primary); margin-top:5px;">
+                            Total Value: <span id="stockTotalValue">₹ 0.00</span>
+                        </div>
+                    </div>
+                    <div>
+                        <button onclick="exportAnyTable('stockDataArea', 'Inventory_Stock_Report', 'pdf')" style="background:transparent; border:1px solid var(--primary); color:var(--primary); padding:4px 8px; border-radius:5px; font-weight:bold; cursor:pointer;">📄 PDF</button>
+                        <button onclick="exportDataExcel(stockDataArray, 'Inventory_Stock_Report')" style="background:var(--success); border:none; color:white; padding:4px 8px; border-radius:5px; font-weight:bold; cursor:pointer; margin-left:5px;">📥 Excel</button>
+                    </div>
+                </div>
+                <div class="card table-wrapper" id="stockDataArea">
+                    <h2 class="print-header" style="display:none; text-align:center; color:var(--primary);">Current Stock Report</h2>
+                    <table class="data-table">
+                        <thead><tr><th>Product Name</th><th>Current Stock</th><th>Price (₹)</th></tr></thead>
+                        <tbody id="stockTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="view-sales" class="view">
+                <div class="flex-between" style="margin-bottom:10px;">
+                    <h3 style="margin:0; font-size:16px;">Sales Ledger</h3>
+                    <div>
+                        <button onclick="exportAnyTable('salesDataArea', 'Sales_Ledger_Report', 'pdf')" style="background:transparent; border:1px solid var(--primary); color:var(--primary); padding:4px 8px; border-radius:5px; font-weight:bold; cursor:pointer;">📄 PDF</button>
+                        <button onclick="exportDataExcel(salesDataArray, 'Sales_Ledger_Report')" style="background:var(--success); border:none; color:white; padding:4px 8px; border-radius:5px; font-weight:bold; cursor:pointer; margin-left:5px;">📥 Excel</button>
+                    </div>
+                </div>
+                <div class="card table-wrapper" id="salesDataArea">
+                    <h2 class="print-header" style="display:none; text-align:center; color:var(--primary);">Sales Ledger</h2>
+                    <table class="data-table">
+                        <thead><tr><th>Date & Time</th><th>Party/Shop</th><th>Items Sold</th><th>Total (₹)</th><th>Salesman</th></tr></thead>
+                        <tbody id="salesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="view-purchase" class="view">
+                <div class="flex-between" style="margin-bottom:10px;">
+                    <h3 style="margin:0; font-size:16px;">Purchase History</h3>
+                    <div>
+                        <button onclick="exportAnyTable('purchaseDataArea', 'Purchase_History_Report', 'pdf')" style="background:transparent; border:1px solid var(--primary); color:var(--primary); padding:4px 8px; border-radius:5px; font-weight:bold; cursor:pointer;">📄 PDF</button>
+                        <button onclick="exportDataExcel(purchaseDataArray, 'Purchase_History_Report')" style="background:var(--success); border:none; color:white; padding:4px 8px; border-radius:5px; font-weight:bold; cursor:pointer; margin-left:5px;">📥 Excel</button>
+                    </div>
+                </div>
+                <div class="card table-wrapper" id="purchaseDataArea">
+                    <h2 class="print-header" style="display:none; text-align:center; color:var(--primary);">Purchase & Refill History</h2>
+                    <table class="data-table">
+                        <thead><tr><th>Date</th><th>Product</th><th>Added Qty</th><th>Price (₹)</th><th>Dealer/Info</th></tr></thead>
+                        <tbody id="purchaseTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="view-admin" class="view">
+                <div class="card">
+                    <div style="font-weight:bold; margin-bottom:10px;">Add/Manage Shop</div>
+                    <input type="text" id="shopName" class="input-field" placeholder="Shop Name">
+                    <input type="tel" id="shopPhone" class="input-field" placeholder="Phone Number">
+                    <input type="text" id="shopAddr" class="input-field" placeholder="Address">
+                    <button class="btn btn-outline" onclick="addShop()">Save Shop</button>
+                </div>
+                
+                <div class="card">
+                    <div style="font-weight:bold; margin-bottom:5px;">Add/Refill Product</div>
+                    <p style="font-size: 11px; color: gray; margin-top: 0; margin-bottom: 10px;">This will automatically record in Purchase History.</p>
+                    
+                    <input type="text" id="prodName" class="input-field" placeholder="Product Name (Type to search)" list="productListOptions" autocomplete="off">
+                    <datalist id="productListOptions"></datalist>
+                    
+                    <div class="flex-between">
+                        <input type="number" id="prodStock" class="input-field" placeholder="New Stock (+)">
+                        <input type="number" id="prodPrice" class="input-field" placeholder="Price (₹)">
+                    </div>
+                    <input type="text" id="purchaseInfo" class="input-field" placeholder="Dealer/Bill Info (Optional)">
+                    <button class="btn btn-outline" id="btnUpdateStock" onclick="addProduct()">Save & Log Purchase</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ⚠️ আপনার ফায়ারবেস কনফিগ এখানে বসান ⚠️
+        const firebaseConfig = {
+            apiKey: "AIzaSyDRm8zdyHdYmaXm5o34GTV3uYkrMPfVfGI",
+            authDomain: "order-with-me-636dd.firebaseapp.com",
+            projectId: "order-with-me-636dd",
+            storageBucket: "order-with-me-636dd.firebasestorage.app",
+            messagingSenderId: "437851738821",
+            appId: "1:437851738821:web:d923816bfd764793db96ac"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        let userData = {}, cart = [], historyData = [];
+        let globalShops = {}; 
+        
+        // Arrays for Excel Exports
+        let stockDataArray = [], salesDataArray = [], purchaseDataArray = [];
+
+        function toast(msg, type="normal") {
+            const t = document.getElementById('toast');
+            t.innerText = msg; 
+            t.style.borderLeftColor = type==='error'?'red':'green';
+            t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+
+        // ==========================================
+        // Auth Logic
+        // ==========================================
+        auth.onAuthStateChanged(user => {
+            if(user) {
+                db.collection("users").doc(user.uid).get().then(doc => {
+                    userData = doc.data() || {};
+                    document.getElementById('sideName').innerText = userData.name || "User";
+                    document.getElementById('sideRole').innerText = userData.role || "Role";
+                    
+                    if(userData.role === 'manager') {
+                        document.getElementById('m-admin').style.display = 'flex';
+                        document.getElementById('m-sales').style.display = 'flex';
+                        document.getElementById('m-purchase').style.display = 'flex';
+                    } else {
+                        document.getElementById('m-admin').style.display = 'none';
+                        document.getElementById('m-sales').style.display = 'none';
+                        document.getElementById('m-purchase').style.display = 'none';
+                    }
+                    
+                    document.getElementById('auth-screen').style.display = 'none';
+                    document.getElementById('app-screen').style.display = 'block';
+                    
+                    let logBtn = document.getElementById('btnLogin');
+                    if(logBtn) { logBtn.innerText = "Login"; logBtn.disabled = false; }
+                    let regBtn = document.getElementById('btnReg');
+                    if(regBtn) { regBtn.innerText = "Create Account"; regBtn.disabled = false; }
+                    
+                    switchView('dashboard');
+                    loadData();
+                });
+            } else {
+                document.getElementById('auth-screen').style.display = 'flex';
+                document.getElementById('app-screen').style.display = 'none';
+            }
+        });
+
+        async function loginUser() {
+            const user = document.getElementById('loginUsername').value.toLowerCase().trim().replace(/\s/g, '');
+            const pass = document.getElementById('loginPassword').value;
+            if(!user || !pass) return toast("Enter username and password", "error");
+
+            const btn = document.getElementById('btnLogin');
+            btn.innerText = "Processing..."; btn.disabled = true;
+
+            try {
+                await auth.signInWithEmailAndPassword(user+"@erp.com", pass);
+                toast("Login Successful!", "success");
+            } catch(e) { 
+                toast("Wrong password or user!", "error");
+                btn.innerText = "Login"; btn.disabled = false; 
+            }
+        }
+
+        async function registerUser() {
+            const name = document.getElementById('regName').value.trim();
+            const user = document.getElementById('regUser').value.toLowerCase().trim().replace(/\s/g, '');
+            const pass = document.getElementById('regPass').value;
+            const role = document.getElementById('regRole').value;
+            
+            if(!name || !user || pass.length < 6) return toast("Check fields carefully", "error");
+            if(role=='manager' && document.getElementById('pinBox').value!='12345') return toast("Wrong Manager PIN", "error");
+
+            const btn = document.getElementById('btnReg');
+            btn.innerText = "Processing..."; btn.disabled = true;
+
+            try {
+                const cred = await auth.createUserWithEmailAndPassword(user+"@erp.com", pass);
+                await db.collection("users").doc(cred.user.uid).set({ name, user, role });
+                toast("Account Created!", "success");
+            } catch(e) { 
+                toast("Username taken or error!", "error");
+                btn.innerText = "Create Account"; btn.disabled = false; 
+            }
+        }
+
+        function logoutApp() {
+            auth.signOut().then(() => {
+                document.getElementById('loginUsername').value = "";
+                document.getElementById('loginPassword').value = "";
+                document.getElementById('sidebar').classList.remove('active');
+                document.getElementById('overlay').classList.remove('active');
+                toast("Logged Out", "success");
+            });
+        }
+
+        function toggleMenu() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('overlay').classList.toggle('active');
+        }
+
+        function switchView(v) {
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.getElementById('view-'+v).classList.add('active');
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active-menu'));
+            if(document.getElementById('m-'+v)) document.getElementById('m-'+v).classList.add('active-menu');
+            
+            let title = v.replace('-', ' ').toUpperCase();
+            document.getElementById('pageTitle').innerText = title;
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+        }
+
+        function toggleAuthView(v) {
+            document.getElementById('login-box').style.display = v=='login'?'block':'none';
+            document.getElementById('reg-box').style.display = v=='reg'?'block':'none';
+        }
+
+        // ==========================================
+        // Data Loaders (Tables & Dashboard)
+        // ==========================================
+        function loadData() {
+            // Load Shops
+            db.collection("shops").orderBy("name").onSnapshot(snap => {
+                const sel = document.getElementById('orderShop');
+                sel.innerHTML = '<option value="">-- Select Shop --</option>';
+                globalShops = {};
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    globalShops[doc.id] = d;
+                    sel.innerHTML += `<option value="${doc.id}">${d.name} (${d.phone || 'No Phone'})</option>`;
+                });
+            });
+
+            // Load Products & Stock Table (Updated with Total Calculation)
+            db.collection("products").onSnapshot(snap => {
+                const sel = document.getElementById('orderItem');
+                const datalist = document.getElementById('productListOptions');
+                const stockBody = document.getElementById('stockTableBody');
+                
+                sel.innerHTML = '<option value="">-- Select Product --</option>';
+                datalist.innerHTML = ''; stockBody.innerHTML = ''; stockDataArray = [];
+                
+                let totalStockValue = 0; // মোট হিসাব রাখার জন্য ভেরিয়েবল
+                
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    let priceFormat = Number(d.price||0).toFixed(2);
+                    
+                    // Stock এবং Price গুণ করে মোট ভ্যালু বের করা হচ্ছে
+                    totalStockValue += (d.stock || 0) * (d.price || 0);
+                    
+                    sel.innerHTML += `<option value="${doc.id}" data-price="${d.price||0}" data-stock="${d.stock||0}">${doc.id} (Stock: ${d.stock||0} | ₹${priceFormat})</option>`;
+                    datalist.innerHTML += `<option value="${doc.id}">`;
+                    
+                    // Stock Ledger Table
+                    let stockStyle = d.stock <= 5 ? "color:var(--danger); font-weight:bold;" : "color:var(--success); font-weight:bold;";
+                    stockBody.innerHTML += `<tr><td><b>${doc.id}</b></td><td style="${stockStyle}">${d.stock||0}</td><td>₹${priceFormat}</td></tr>`;
+                    
+                    stockDataArray.push({ "Product Name": doc.id, "Current Stock": d.stock||0, "Price (₹)": Number(priceFormat) });
+                });
+
+                // HTML-এ মোট ভ্যালুটা দেখানো হচ্ছে
+                if(document.getElementById('stockTotalValue')) {
+                    document.getElementById('stockTotalValue').innerText = `₹ ${Number(totalStockValue).toFixed(2)}`;
+                }
+            });
+
+            // Load Purchase History Table
+            db.collection("purchases").orderBy("time","desc").limit(100).onSnapshot(snap => {
+                const pBody = document.getElementById('purchaseTableBody');
+                pBody.innerHTML = ""; purchaseDataArray = [];
+                
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    let dateStr = d.time ? d.time.toDate().toLocaleDateString() : 'Just now';
+                    let pFormat = Number(d.price||0).toFixed(2);
+                    
+                    pBody.innerHTML += `<tr><td>${dateStr}</td><td><b>${d.item}</b></td><td style="color:var(--primary); font-weight:bold;">+${d.addedStock}</td><td>₹${pFormat}</td><td>${d.dealer||'N/A'}</td></tr>`;
+                    
+                    purchaseDataArray.push({ "Date": dateStr, "Product Name": d.item, "Added Qty": d.addedStock, "Price (₹)": Number(pFormat), "Dealer Info": d.dealer||'N/A' });
+                });
+            });
+
+            // Load Orders, History Cards, Sales Ledger & Dashboard
+            db.collection("orders").orderBy("time","desc").onSnapshot(snap => {
+                const list = document.getElementById('historyList');
+                const salesBody = document.getElementById('salesTableBody');
+                const billSel = document.getElementById('billingSelect');
+                
+                list.innerHTML = ""; salesBody.innerHTML = ""; 
+                billSel.innerHTML = '<option value="">-- Choose an Order --</option>';
+                historyData = []; salesDataArray = [];
+                
+                let totalSalesAmount = 0;
+                let totalOrdersCount = 0;
+                let shopSalesMap = {};
+
+                if(snap.empty) { 
+                    list.innerHTML = "<div style='text-align:center; padding:20px; color:gray;'>No Orders Found</div>"; 
+                    document.getElementById('dashTotalSales').innerText = "₹ 0.00";
+                    document.getElementById('dashTotalOrders').innerText = "0";
+                    document.getElementById('dashTopShop').innerText = "N/A";
+                    document.getElementById('dashTopShopAmount').innerText = "₹ 0.00";
+                    return; 
+                }
+                
+                let idx = 0;
+                snap.forEach(doc => {
+                    let d = doc.data();
+                    d.orderId = doc.id; 
+                    historyData.push(d);
+                    
+                    let totalFormat = Number(d.total||0).toFixed(2);
+                    
+                    totalOrdersCount++;
+                    totalSalesAmount += (d.total || 0);
+                    shopSalesMap[d.shopName] = (shopSalesMap[d.shopName] || 0) + (d.total || 0);
+                    
+                    let timeString = d.time ? d.time.toDate().toLocaleString() : 'Just now';
+                    let shortTime = d.time ? d.time.toDate().toLocaleDateString() : '';
+                    let itemsHtml = (d.items || []).map(i => `${i.id}(${i.qty})`).join(', ');
+                    
+                    billSel.innerHTML += `<option value="${idx}">${d.shopName} - ₹${totalFormat} (${shortTime})</option>`;
+
+                    // Action Button Logic
+                    let actionBtn = "";
+                    if (userData.role === 'manager') {
+                        actionBtn = `<button onclick="deleteOrder(${idx})" style="background:var(--danger); border:none; color:white; padding:4px 8px; border-radius:5px; font-weight:bold; cursor:pointer; margin-left:10px;">🗑️ Delete</button>`;
+                    } else if (d.salesman === userData.name) {
+                        actionBtn = `<button onclick="deleteOrder(${idx})" style="background:var(--warning); border:none; color:white; padding:4px 8px; border-radius:5px; font-weight:bold; cursor:pointer; margin-left:10px;">↩️ Undo</button>`;
+                    }
+
+                    // History Card
+                    list.innerHTML += `
+                        <div class="card">
+                            <div class="flex-between" style="border-bottom:1px solid #eee; padding-bottom:5px; margin-bottom:5px;">
+                                <b style="color:var(--primary)">${d.shopName}</b>
+                                <small style="color:gray; font-size:11px;">${timeString}</small>
+                            </div>
+                            <div style="font-size:13px; color:gray; line-height:1.6;">${itemsHtml}</div>
+                            <div style="font-size:11px; margin-top:5px;">👤 ${d.salesman}</div>
+                            <div class="flex-between" style="margin-top:10px;">
+                                <span>Total: <b style="font-size:16px;">₹ ${totalFormat}</b></span>
+                                <div>
+                                    <button onclick="document.getElementById('billingSelect').value='${idx}'; switchView('billing'); renderA5Bill();" style="background:transparent; border:1px solid var(--primary); color:var(--primary); padding:4px 8px; border-radius:5px; font-weight:bold; cursor:pointer;">🧾 Bill</button>
+                                    ${actionBtn}
+                                </div>
+                            </div>
+                        </div>`;
+                        
+                    // Sales Ledger Row
+                    salesBody.innerHTML += `<tr><td>${timeString}</td><td><b>${d.shopName}</b></td><td>${itemsHtml}</td><td style="color:var(--success); font-weight:bold;">₹${totalFormat}</td><td>${d.salesman}</td></tr>`;
+                    
+                    salesDataArray.push({ "Date & Time": timeString, "Party Name": d.shopName, "Items": itemsHtml, "Total Amount (₹)": Number(totalFormat), "Salesman": d.salesman });
+                    
+                    idx++;
+                });
+
+                document.getElementById('dashTotalSales').innerText = `₹ ${Number(totalSalesAmount).toFixed(2)}`;
+                document.getElementById('dashTotalOrders').innerText = totalOrdersCount;
+
+                if(Object.keys(shopSalesMap).length > 0) {
+                    let topShop = Object.keys(shopSalesMap).reduce((a, b) => shopSalesMap[a] > shopSalesMap[b] ? a : b);
+                    document.getElementById('dashTopShop').innerText = topShop;
+                    document.getElementById('dashTopShopAmount').innerText = `₹ ${Number(shopSalesMap[topShop]).toFixed(2)}`;
+                }
+            });
+        }
+
+        // ==========================================
+        // Cart, Undo, Orders & Delete
+        // ==========================================
+        function addToCart() {
+            const pId = document.getElementById('orderItem').value;
+            const qty = parseInt(document.getElementById('orderQty').value);
+            if(!pId || !qty || qty <= 0) return toast("Select item and valid quantity", "error");
+
+            const pOption = document.querySelector(`#orderItem option[value="${pId}"]`);
+            const price = parseFloat(pOption.dataset.price);
+            const stock = parseInt(pOption.dataset.stock);
+
+            let currentQty = 0;
+            let existingIdx = cart.findIndex(item => item.id === pId);
+            if(existingIdx !== -1) currentQty = cart[existingIdx].qty;
+
+            if((qty + currentQty) > stock) return toast("Low stock! Available: " + stock, "error");
+
+            if(existingIdx !== -1) {
+                cart[existingIdx].qty += qty;
+                cart[existingIdx].total = cart[existingIdx].qty * price;
+            } else {
+                cart.push({ id: pId, qty, price, total: qty * price });
+            }
+            renderCart();
+            document.getElementById('orderQty').value = "";
+        }
+
+        function undoCart() {
+            if(cart.length > 0) {
+                cart.pop(); renderCart(); toast("Item removed", "success");
+            } else { toast("Cart is empty", "error"); }
+        }
+
+        function renderCart() {
+            const list = document.getElementById('cartList');
+            list.innerHTML = "";
+            let grand = 0;
+            cart.forEach((item, index) => {
+                grand += item.total;
+                list.innerHTML += `
+                    <div class="cart-item flex-between">
+                        <span>${item.id} <b style="color:var(--primary)">(x${item.qty})</b></span>
+                        <span>₹ ${Number(item.total).toFixed(2)} <span onclick="cart.splice(${index},1);renderCart()" style="color:red; margin-left:15px; cursor:pointer;">✖</span></span>
+                    </div>`;
+            });
+            document.getElementById('cartTotal').innerText = "₹ " + Number(grand).toFixed(2);
+            document.getElementById('cartCard').style.display = cart.length > 0 ? 'block' : 'none';
+        }
+
+        async function placeFinalOrder() {
+            const shopName = document.getElementById('orderShop').value;
+            if(!shopName || cart.length === 0) return toast("Shop or Cart empty!", "error");
+
+            const btn = document.getElementById('btnPlace');
+            btn.innerText = "Processing..."; btn.disabled = true;
+
+            const orderObj = {
+                shopName: shopName, items: cart, total: cart.reduce((sum, item) => sum + item.total, 0),
+                salesman: userData.name, time: firebase.firestore.FieldValue.serverTimestamp()
+            };
+
+            try {
+                for(let item of cart) {
+                    const ref = db.collection("products").doc(item.id);
+                    await db.runTransaction(async (tr) => {
+                        const doc = await tr.get(ref);
+                        if(doc.exists) tr.update(ref, { stock: doc.data().stock - item.qty });
+                    });
+                }
+                await db.collection("orders").add(orderObj);
+                toast("Order Placed!", "success");
+                cart = []; renderCart();
+                document.getElementById('orderShop').value = "";
+                switchView('history');
+            } catch(e) { toast("Error: " + e.message, "error"); }
+            
+            btn.innerText = "Place Final Order"; btn.disabled = false;
+        }
+
+        async function deleteOrder(idx) {
+            if(!confirm("Delete this order and return stock?")) return;
+
+            let d = historyData[idx];
+            if(!d || !d.orderId) return;
+
+            try {
+                for(let item of d.items) {
+                    const ref = db.collection("products").doc(item.id);
+                    await db.runTransaction(async (tr) => {
+                        const pDoc = await tr.get(ref);
+                        if(pDoc.exists) {
+                            tr.update(ref, { stock: pDoc.data().stock + item.qty });
+                        }
+                    });
+                }
+                await db.collection("orders").doc(d.orderId).delete();
+                toast("Order deleted and stock returned!", "success");
+            } catch(e) { toast("Error: " + e.message, "error"); }
+        }
+
+        // ==========================================
+        // Manager Actions (Shop, Product & Purchase Log)
+        // ==========================================
+        async function addShop() {
+            const name = document.getElementById('shopName').value.trim();
+            const phone = document.getElementById('shopPhone').value.trim();
+            const addr = document.getElementById('shopAddr').value.trim();
+            if(!name) return toast("Shop Name is required!", "error");
+            
+            try {
+                await db.collection("shops").doc(name).set({ name, phone, addr }, {merge:true});
+                toast("Shop Saved!", "success");
+                document.getElementById('shopName').value=""; document.getElementById('shopPhone').value=""; document.getElementById('shopAddr').value="";
+            } catch(e) { toast(e.message, "error"); }
+        }
+
+        async function addProduct() {
+            const name = document.getElementById('prodName').value.trim();
+            const newStock = parseInt(document.getElementById('prodStock').value);
+            const price = parseFloat(document.getElementById('prodPrice').value);
+            const dealerInfo = document.getElementById('purchaseInfo').value.trim();
+            
+            if(!name || isNaN(newStock)) return toast("Product Name and New Stock required!", "error");
+
+            const btn = document.getElementById('btnUpdateStock');
+            btn.innerText = "Saving..."; btn.disabled = true;
+
+            try {
+                const ref = db.collection("products").doc(name);
+                const doc = await ref.get();
+                let finalStock = newStock;
+                let finalPrice = price;
+
+                if(doc.exists) {
+                    finalStock = (doc.data().stock || 0) + newStock;
+                    if(isNaN(price)) finalPrice = doc.data().price || 0;
+                }
+
+                // 1. Update Inventory
+                await ref.set({ stock: finalStock, price: finalPrice }, {merge:true});
+                
+                // 2. Log Purchase History (If stock is added)
+                if(newStock > 0) {
+                    await db.collection("purchases").add({
+                        item: name, addedStock: newStock, price: finalPrice, dealer: dealerInfo,
+                        addedBy: userData.name, time: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+
+                toast("Product Updated & Purchase Logged!", "success");
+                document.getElementById('prodName').value=""; document.getElementById('prodStock').value=""; 
+                document.getElementById('prodPrice').value=""; document.getElementById('purchaseInfo').value="";
+            } catch(e) { toast(e.message, "error"); }
+            
+            btn.innerText = "Save & Log Purchase"; btn.disabled = false;
+        }
+
+        // ==========================================
+        // Billing & Export Functions
+        // ==========================================
+        function renderA5Bill() {
+            let idx = document.getElementById('billingSelect').value;
+            let preview = document.getElementById('bill-preview-section');
+            if(idx === "") { preview.style.display = 'none'; return; }
+            
+            let d = historyData[idx];
+            let dateStr = d.time ? d.time.toDate().toLocaleString() : 'N/A';
+            let shopPhone = globalShops[d.shopName] ? globalShops[d.shopName].phone : 'N/A';
+
+            document.getElementById('b-shopName').innerText = d.shopName;
+            document.getElementById('b-shopPhone').innerText = "Ph: " + shopPhone;
+            document.getElementById('b-date').innerText = dateStr;
+            document.getElementById('b-salesman').innerText = d.salesman;
+            document.getElementById('b-orderId').innerText = "#" + d.orderId.substring(0,6).toUpperCase();
+
+            let tbody = "";
+            d.items.forEach((i, sl) => {
+                let itemPrice = Number(i.price).toFixed(2);
+                let itemTotal = Number(i.total).toFixed(2);
+                tbody += `<tr>
+                    <td>${sl+1}</td>
+                    <td>${i.id}<br><small>@ ₹${itemPrice}</small></td>
+                    <td>${i.qty}</td>
+                    <td style="text-align:right;">₹${itemTotal}</td>
+                </tr>`;
+            });
+            document.getElementById('b-itemsBody').innerHTML = tbody;
+            document.getElementById('b-grandTotal').innerText = Number(d.total).toFixed(2);
+            
+            preview.style.display = 'block';
+        }
+
+        function downloadA5PDF() {
+            let element = document.getElementById('a5-print-zone');
+            let d = historyData[document.getElementById('billingSelect').value];
+            let opt = { margin: 0.2, filename: `Invoice_${d.shopName}_${d.orderId.substring(0,5)}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a5', orientation: 'portrait' } };
+            toast("Generating PDF...", "normal");
+            html2pdf().set(opt).from(element).save().then(() => toast("PDF Downloaded!", "success"));
+        }
+
+        function exportAnyTable(elementId, filename, type) {
+            let el = document.getElementById(elementId);
+            let headers = el.querySelectorAll('.print-header');
+            headers.forEach(h => h.style.display = 'block'); // Show title for PDF
+            
+            toast("Generating PDF Report...");
+            let opt = { margin: 0.3, filename: `${filename}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' } };
+            html2pdf().set(opt).from(el).save().then(() => headers.forEach(h => h.style.display = 'none'));
+        }
+
+        function exportDataExcel(dataArray, filename) {
+            if(!dataArray || dataArray.length === 0) return toast("No data to export", "error");
+            toast("Exporting Excel...");
+            const ws = XLSX.utils.json_to_sheet(dataArray);
+            const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Report");
+            XLSX.writeFile(wb, `${filename}.xlsx`);
+        }
+    </script>
+</body>
+</html>
