@@ -5045,6 +5045,10 @@
                 if(userData.role==='manager') updateDashboardCharts(last7DaysMap,topItemsMap);
                 renderDueList();
                 renderQuickAccess();
+                // ---- NOTIFICATION WATCHERS ----
+                if (typeof notifWatchOrders === 'function') notifWatchOrders(historyData);
+                if (typeof notifWatchDelivery === 'function') notifWatchDelivery(historyData);
+                if (typeof notifCheckDuePayments === 'function') notifCheckDuePayments();
             });
 
             db.collection("shop_notes").orderBy("time","desc").limit(500).onSnapshot(snap => {
@@ -10748,18 +10752,7 @@ Powered by Order With Me ERP`);
             notifCheckDuePayments();
         }, 30000);
 
-        /* Patch the existing onSnapshot to also call notif watchers */
-        (function patchSnapshotListener() {
-            const origDb = typeof db !== 'undefined' ? db : null;
-            if (!origDb) { setTimeout(patchSnapshotListener, 1500); return; }
-            // Intercept historyData pushes
-            const checkInterval = setInterval(() => {
-                if (typeof historyData !== 'undefined' && historyData.length > 0) {
-                    _origRenderNotifFromSnap(historyData);
-                    clearInterval(checkInterval);
-                }
-            }, 2000);
-        })();
+        /* Patch removed — notifWatchOrders is now called directly inside the orders onSnapshot */
 
         /* Watch for delivery status changes via MutationObserver on historyList */
         (function watchDeliveryMutations() {
