@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Order With Me - ERP</title>
+    <title>Order With Me® - ERP</title>
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
@@ -1259,7 +1259,15 @@
         .admin-panel-edit-bar .edit-hint { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #64748b; }
         
         /* ===== QUOTATION BUILDER ===== */
+        @keyframes slideUp { from { opacity:0; transform:translateX(-50%) translateY(20px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+        @keyframes slideDown { from { opacity:1; transform:translateX(-50%) translateY(0); } to { opacity:0; transform:translateX(-50%) translateY(20px); } }
         .qt-theme-btn.active-theme { border-color: #4f46e5 !important; box-shadow: 0 0 0 3px rgba(79,70,229,0.25) !important; }
+        .po-theme-btn { transition: transform 0.15s; }
+        .po-theme-btn:hover { transform: scale(1.04); }
+        .po-theme-btn.active-po-theme { border-color: #059669 !important; box-shadow: 0 0 0 3px rgba(5,150,105,0.25) !important; }
+        #poItemsList .po-item-row { display:grid; grid-template-columns:1fr 80px 90px 36px; gap:6px; margin-bottom:8px; align-items:center; }
+        #poItemsList .po-item-del { background:rgba(244,63,94,0.1); border:1px solid rgba(244,63,94,0.3); color:#f43f5e; border-radius:8px; width:36px; height:42px; cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; transition:background 0.2s; }
+        #poItemsList .po-item-del:hover { background:rgba(244,63,94,0.2); }
         .qt-item-row { display:flex; gap:6px; align-items:center; margin-bottom:8px; background:var(--bg); border-radius:10px; padding:8px 10px; border:1px solid var(--border); }
         .qt-item-row input { margin-bottom:0 !important; padding:8px 10px !important; font-size:12px !important; }
         .qt-item-name  { flex:2; }
@@ -1824,23 +1832,35 @@
             <span id="authThemeLabel">Dark</span>
         </button>
 
+        <!-- ===== LOGIN BOX ===== -->
         <div id="login-box" class="card auth-login-card-animated" style="width:100%; max-width:380px; text-align:center; padding:32px 28px;">
-            <!-- Animated cart icon -->
             <div class="auth-cart-icon-wrap" style="width:64px;height:64px;background:linear-gradient(135deg,#4f46e5,#6366f1);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;box-shadow:0 8px 24px rgba(79,70,229,0.35);">
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
             </div>
-            <div class="auth-brand auth-brand-animated">Order With Me</div>
+            <div class="auth-brand auth-brand-animated">Order With Me<sup style="font-size:0.55em;vertical-align:super;line-height:0;">®</sup></div>
             <div class="auth-brand-sub auth-brand-sub-animated" style="display:flex;align-items:center;justify-content:center;gap:6px;">
                 <span class="auth-shimmer-badge" style="background:linear-gradient(90deg,rgba(79,70,229,0.0),rgba(79,70,229,0.15),rgba(79,70,229,0.0));background-size:200%;animation:shimmer 2.5s ease-in-out infinite;padding:2px 10px;border-radius:20px;border:1px solid rgba(79,70,229,0.15);">Business ERP</span>
                 <span>— Sign in to continue</span>
             </div>
+            <!-- Company Code field -->
+            <div style="position:relative; margin-bottom:0;">
+                <input type="text" id="loginCompanyCode" class="input-field" placeholder="🏢 Company Code (e.g. OWM-1234)" style="text-transform:uppercase; letter-spacing:1px;" onkeydown="if(event.key==='Enter') loginUser()">
+            </div>
             <input type="text" id="loginUsername" class="input-field" placeholder="Username" onkeydown="if(event.key==='Enter') loginUser()">
             <input type="password" id="loginPassword" class="input-field" placeholder="Password" onkeydown="if(event.key==='Enter') loginUser()">
             <button class="btn btn-success" onclick="loginUser()" id="btnLogin">Login</button>
-            <p class="auth-link-text">No account? <span class="auth-link-highlight" onclick="toggleAuthView('reg')">Register here</span></p>
+            <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:4px;">
+                <p class="auth-link-text" style="margin:0;">No account? <span class="auth-link-highlight" onclick="toggleAuthView('reg')">Register User</span></p>
+                <span style="color:#cbd5e1;">|</span>
+                <p class="auth-link-text" style="margin:0;">New company? <span class="auth-link-highlight" onclick="toggleAuthView('company-reg')">Register Company</span></p>
+            </div>
         </div>
+
+        <!-- ===== USER REGISTER BOX ===== -->
         <div id="reg-box" class="card" style="width:100%; max-width:380px; display:none; padding:28px;">
-            <div style="font-size:20px; font-weight:800; text-align:center; margin-bottom:18px;" class="auth-title-text">Create Account</div>
+            <div style="font-size:20px; font-weight:800; text-align:center; margin-bottom:4px;" class="auth-title-text">Create Account</div>
+            <p style="font-size:12px; color:#64748b; text-align:center; margin:0 0 16px;">Join an existing company</p>
+            <input type="text" id="regCompanyCode" class="input-field" placeholder="🏢 Company Code" style="text-transform:uppercase; letter-spacing:1px;">
             <input type="text" id="regName" class="input-field" placeholder="Full Name">
             <input type="text" id="regUser" class="input-field" placeholder="Unique Username">
             <input type="password" id="regPass" class="input-field" placeholder="Password (min 6 chars)">
@@ -1851,6 +1871,24 @@
             <input type="password" id="pinBox" class="input-field" placeholder="Registration Password">
             <button class="btn" onclick="registerUser()" id="btnReg">Create Account</button>
             <p class="auth-link-text" style="text-align:center;">Have account? <span class="auth-link-highlight" onclick="toggleAuthView('login')">Login here</span></p>
+        </div>
+
+        <!-- ===== COMPANY REGISTER BOX ===== -->
+        <div id="company-reg-box" class="card" style="width:100%; max-width:380px; display:none; padding:28px;">
+            <div style="font-size:20px; font-weight:800; text-align:center; margin-bottom:4px;" class="auth-title-text">🏢 Register Company</div>
+            <p style="font-size:12px; color:#64748b; text-align:center; margin:0 0 16px;">Create a new company workspace</p>
+            <input type="text" id="compRegCompanyName" class="input-field" placeholder="Company Name (e.g. ABC Traders)">
+            <input type="text" id="compRegAdminName" class="input-field" placeholder="Your Name (Admin)">
+            <input type="text" id="compRegUser" class="input-field" placeholder="Admin Username">
+            <input type="password" id="compRegPass" class="input-field" placeholder="Password (min 6 chars)">
+            <input type="password" id="compRegPin" class="input-field" placeholder="Registration Password">
+            <div id="compRegCodeDisplay" style="display:none; background:linear-gradient(135deg,rgba(79,70,229,0.1),rgba(99,102,241,0.05)); border:1.5px solid rgba(79,70,229,0.3); border-radius:12px; padding:14px; text-align:center; margin-bottom:12px;">
+                <div style="font-size:11px; color:#64748b; margin-bottom:4px;">Your Company Code</div>
+                <div id="compRegCodeValue" style="font-size:24px; font-weight:900; letter-spacing:3px; color:#4f46e5;"></div>
+                <div style="font-size:11px; color:#94a3b8; margin-top:4px;">⚠️ Save this code — share it with your team</div>
+            </div>
+            <button class="btn" onclick="registerCompany()" id="btnCompReg">Create Company</button>
+            <p class="auth-link-text" style="text-align:center;">Already have a company? <span class="auth-link-highlight" onclick="toggleAuthView('login')">Login here</span></p>
         </div>
 
         <!-- Credit -->
@@ -1892,6 +1930,7 @@
                     <div style="flex:1;min-width:0;">
                         <h3 id="sideName" style="margin:0;font-size:15px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">User</h3>
                         <p id="sideRole" style="font-size:10px;color:white;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin:3px 0 0;background:var(--primary);display:inline-block;padding:2px 9px;border-radius:20px;">Role</p>
+                        <p id="sideCompanyCode" style="font-size:9px;color:rgba(255,255,255,0.7);margin:4px 0 0;font-weight:600;letter-spacing:0.5px;"></p>
                     </div>
                     <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;">
                         <button onclick="logoutApp()" style="padding:4px 11px;border:none;border-radius:20px;background:linear-gradient(135deg,#f43f5e,#e11d48);color:white;font-weight:700;font-size:11px;cursor:pointer;font-family:'Poppins',sans-serif;box-shadow:0 2px 8px rgba(244,63,94,0.3);">Logout</button>
@@ -1926,14 +1965,17 @@
         </div>
 
         <div class="header no-print">
-            <div style="display:flex; align-items:center; gap:14px;">
-                <button onclick="toggleMenu()" style="background:rgba(255,255,255,0.15); border:none; border-radius:10px; width:36px; height:36px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:white; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+            <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0; overflow:hidden;">
+                <button onclick="toggleMenu()" style="background:rgba(255,255,255,0.15); border:none; border-radius:10px; width:36px; height:36px; flex-shrink:0; display:flex; align-items:center; justify-content:center; cursor:pointer; color:white; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
                 </button>
-                <h3 id="pageTitle" style="margin:0; font-size:15px; font-weight:700; letter-spacing:0.5px; color:white;">DASHBOARD</h3>
+                <div style="min-width:0; overflow:hidden;">
+                    <h3 id="pageTitle" style="margin:0; font-size:14px; font-weight:700; letter-spacing:0.5px; color:white; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">DASHBOARD</h3>
+                    <div id="headerCompanyName" style="font-size:10px; color:rgba(255,255,255,0.7); font-weight:600; letter-spacing:0.5px; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"></div>
+                </div>
             </div>
-            <div style="display:flex; align-items:center; gap:8px;">
-                <div id="realTimeClock" style="text-align:right; line-height:1.3;"></div>
+            <div style="display:flex; align-items:center; gap:8px; flex-shrink:0;">
+                <div id="realTimeClock" style="text-align:right; line-height:1.3; white-space:nowrap;"></div>
                 <!-- Notification Bell -->
                 <button class="notif-bell-btn" id="notifBellBtn" onclick="toggleNotifPanel()" title="Notifications">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -2191,7 +2233,7 @@
                     </div>
                 </div>
                 <div id="managerChartsWrapper" style="display:none;">
-                    <button type="button" class="collapse-btn" onclick="toggleCollapse('managerChartsArea')">📊 Show / Hide Dashboard Charts</button>
+                    <button type="button" class="collapse-btn" onclick="toggleCollapseSimple('managerChartsArea')">📊 Show / Hide Dashboard Charts</button>
                     <div class="dash-grid" id="managerChartsArea" style="display:none;">
                         <div class="card">
                             <div style="font-weight:700; margin-bottom:10px; font-size:12px; color:#94a3b8; text-transform:uppercase; letter-spacing:0.5px;">📈 Last 7 Days Sales Trend</div>
@@ -2429,7 +2471,7 @@
                         </div>
                         <!-- Dark header band -->
                         <div class="bill-header">
-                            <h1 id="b-companyName">Order With Me</h1>
+                            <h1 id="b-companyName">Order With Me<sup style="font-size:0.55em;vertical-align:super;line-height:0;">®</sup></h1>
                             <div class="bill-tagline">TAX INVOICE / RETAIL BILL</div>
                         </div>
                         <!-- Info strip -->
@@ -2721,7 +2763,193 @@
                 </div>
             </div>
 
-            <!-- STOCK -->
+            <!-- PURCHASE ORDER BUILDER -->
+            <div id="view-po-builder" class="view">
+                <div class="card no-print">
+                    <div style="font-size:15px; font-weight:800; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+                        🛒 Purchase Order Builder
+                        <span style="font-size:10px; background:linear-gradient(135deg,#059669,#10b981); color:white; border-radius:20px; padding:2px 10px; font-weight:700;">MANAGER</span>
+                    </div>
+
+                    <!-- Theme Selector -->
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; display:block; margin-bottom:8px;">🎨 Select Theme</label>
+                        <div id="poThemeGrid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:7px;">
+                            <div class="po-theme-btn active-po-theme" data-theme="classic" onclick="selectPoTheme(this,'classic')" style="border-radius:10px;overflow:hidden;cursor:pointer;border:2.5px solid #059669;box-shadow:0 0 0 2px rgba(5,150,105,0.2);">
+                                <div style="height:36px;background:linear-gradient(135deg,#ecfdf5,#a7f3d0,#34d399);"></div>
+                                <div style="font-size:8.5px;font-weight:700;text-align:center;padding:3px 2px;background:#ecfdf5;color:#065f46;">Classic</div>
+                            </div>
+                            <div class="po-theme-btn" data-theme="corporate" onclick="selectPoTheme(this,'corporate')" style="border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid var(--border);">
+                                <div style="height:36px;background:linear-gradient(135deg,#1e3a5f,#2563eb,#60a5fa);"></div>
+                                <div style="font-size:8.5px;font-weight:700;text-align:center;padding:3px 2px;background:#1e3a5f;color:#bfdbfe;">Corporate</div>
+                            </div>
+                            <div class="po-theme-btn" data-theme="royal" onclick="selectPoTheme(this,'royal')" style="border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid var(--border);">
+                                <div style="height:36px;background:linear-gradient(135deg,#1a1a2e,#16213e,#533483);"></div>
+                                <div style="font-size:8.5px;font-weight:700;text-align:center;padding:3px 2px;background:#1a1a2e;color:#e2c97e;">Royal</div>
+                            </div>
+                            <div class="po-theme-btn" data-theme="crimson" onclick="selectPoTheme(this,'crimson')" style="border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid var(--border);">
+                                <div style="height:36px;background:linear-gradient(135deg,#7f1d1d,#dc2626,#f87171);"></div>
+                                <div style="font-size:8.5px;font-weight:700;text-align:center;padding:3px 2px;background:#7f1d1d;color:#fecaca;">Crimson</div>
+                            </div>
+                            <div class="po-theme-btn" data-theme="ocean" onclick="selectPoTheme(this,'ocean')" style="border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid var(--border);">
+                                <div style="height:36px;background:linear-gradient(135deg,#0c4a6e,#0284c7,#38bdf8);"></div>
+                                <div style="font-size:8.5px;font-weight:700;text-align:center;padding:3px 2px;background:#0c4a6e;color:#bae6fd;">Ocean</div>
+                            </div>
+                            <div class="po-theme-btn" data-theme="gold" onclick="selectPoTheme(this,'gold')" style="border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid var(--border);">
+                                <div style="height:36px;background:linear-gradient(135deg,#78350f,#d97706,#fcd34d);"></div>
+                                <div style="font-size:8.5px;font-weight:700;text-align:center;padding:3px 2px;background:#78350f;color:#fef3c7;">Gold</div>
+                            </div>
+                            <div class="po-theme-btn" data-theme="slate" onclick="selectPoTheme(this,'slate')" style="border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid var(--border);">
+                                <div style="height:36px;background:linear-gradient(135deg,#0f172a,#1e293b,#475569);"></div>
+                                <div style="font-size:8.5px;font-weight:700;text-align:center;padding:3px 2px;background:#0f172a;color:#94a3b8;">Slate</div>
+                            </div>
+                            <div class="po-theme-btn" data-theme="violet" onclick="selectPoTheme(this,'violet')" style="border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid var(--border);">
+                                <div style="height:36px;background:linear-gradient(135deg,#2e1065,#7c3aed,#c4b5fd);"></div>
+                                <div style="font-size:8.5px;font-weight:700;text-align:center;padding:3px 2px;background:#2e1065;color:#ddd6fe;">Violet</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PO Details -->
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:11px; font-weight:600; color:#64748b; display:block; margin-bottom:4px;">🏢 Buyer Company Name</label>
+                        <input id="po-buyerName" class="input-field" placeholder="Your company name" style="margin-bottom:0;" oninput="renderPO()">
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                        <div>
+                            <label style="font-size:11px; font-weight:600; color:#64748b; display:block; margin-bottom:4px;">🏭 Supplier / Vendor Name</label>
+                            <input id="po-supplierName" class="input-field" placeholder="Supplier name" style="margin-bottom:0;" oninput="renderPO()">
+                        </div>
+                        <div>
+                            <label style="font-size:11px; font-weight:600; color:#64748b; display:block; margin-bottom:4px;">PO Number</label>
+                            <input id="po-poNo" class="input-field" placeholder="PO-2024-001" style="margin-bottom:0;" oninput="renderPO()">
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                        <div>
+                            <label style="font-size:11px; font-weight:600; color:#64748b; display:block; margin-bottom:4px;">📅 Order Date</label>
+                            <input id="po-orderDate" type="date" class="input-field" style="margin-bottom:0;" oninput="renderPO()">
+                        </div>
+                        <div>
+                            <label style="font-size:11px; font-weight:600; color:#64748b; display:block; margin-bottom:4px;">🚚 Delivery Date</label>
+                            <input id="po-deliveryDate" type="date" class="input-field" style="margin-bottom:0;" oninput="renderPO()">
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                        <div>
+                            <label style="font-size:11px; font-weight:600; color:#64748b; display:block; margin-bottom:4px;">💳 Payment Terms</label>
+                            <select id="po-paymentTerms" class="input-field" style="margin-bottom:0;" onchange="renderPO()">
+                                <option value="Immediate">Immediate</option>
+                                <option value="Net 7">Net 7 Days</option>
+                                <option value="Net 15">Net 15 Days</option>
+                                <option value="Net 30" selected>Net 30 Days</option>
+                                <option value="Net 45">Net 45 Days</option>
+                                <option value="Net 60">Net 60 Days</option>
+                                <option value="50% Advance">50% Advance</option>
+                                <option value="Against Delivery">Against Delivery</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size:11px; font-weight:600; color:#64748b; display:block; margin-bottom:4px;">📦 Delivery Address</label>
+                            <input id="po-deliveryAddr" class="input-field" placeholder="Delivery location" style="margin-bottom:0;" oninput="renderPO()">
+                        </div>
+                    </div>
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:11px; font-weight:600; color:#64748b; display:block; margin-bottom:4px;">👤 Authorized By</label>
+                        <input id="po-authorizedBy" class="input-field" placeholder="Manager / Authorized person name" style="margin-bottom:0;" oninput="renderPO()">
+                    </div>
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:11px; font-weight:600; color:#64748b; display:block; margin-bottom:4px;">📝 Terms & Conditions</label>
+                        <textarea id="po-terms" class="input-field" rows="2" placeholder="e.g. GST extra as applicable. All disputes subject to local jurisdiction." style="resize:none; margin-bottom:0;" oninput="renderPO()"></textarea>
+                    </div>
+
+                    <!-- Items Builder -->
+                    <div style="font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">📦 Add Products / Items</div>
+                    <div id="poItemsList" style="margin-bottom:10px;"></div>
+                    <button class="btn btn-outline" onclick="addPoItem()" style="margin-bottom:10px; font-size:13px; padding:10px;">+ Add Item</button>
+
+                    <!-- Discount & Tax -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+                        <div>
+                            <label style="font-size:11px; font-weight:600; color:#64748b; display:block; margin-bottom:4px;">Discount (%)</label>
+                            <input id="po-discount" type="number" min="0" max="100" class="input-field" placeholder="0" value="0" style="margin-bottom:0;" oninput="renderPO()">
+                        </div>
+                        <div>
+                            <label style="font-size:11px; font-weight:600; color:#64748b; display:block; margin-bottom:4px;">Tax / GST (%)</label>
+                            <input id="po-tax" type="number" min="0" max="100" class="input-field" placeholder="0" value="0" style="margin-bottom:0;" oninput="renderPO()">
+                        </div>
+                    </div>
+
+                    <!-- Action buttons -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr 44px; gap:8px; align-items:stretch; margin-bottom:8px;">
+                        <button class="btn" onclick="renderPO()" style="margin-bottom:0; padding:11px 8px; font-size:12px;">👁️ Preview</button>
+                        <button class="btn btn-success" onclick="downloadPoPDF()" style="margin-bottom:0; padding:11px 8px; font-size:12px;">💾 Save PDF</button>
+                        <button onclick="printPO()" style="height:100%; border:none; border-radius:12px; background:linear-gradient(135deg,#0369a1,#0284c7); color:white; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 12px rgba(3,105,161,0.3);">🖨️</button>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                        <button onclick="sendPOViaGmail()" style="border:none; border-radius:12px; padding:12px 8px; font-size:13px; font-weight:700; font-family:'Poppins',sans-serif; cursor:pointer; background:linear-gradient(135deg,#ea4335,#fbbc04); color:white; box-shadow:0 4px 14px rgba(234,67,53,0.35); display:flex; align-items:center; justify-content:center; gap:6px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                            Send via Gmail
+                        </button>
+                        <button onclick="openPoTracker()" style="border:none; border-radius:12px; padding:12px 8px; font-size:13px; font-weight:700; font-family:'Poppins',sans-serif; cursor:pointer; background:linear-gradient(135deg,#059669,#10b981); color:white; box-shadow:0 4px 14px rgba(5,150,105,0.35); display:flex; align-items:center; justify-content:center; gap:6px; position:relative;">
+                            📊 Track POs
+                            <span id="po-pending-badge" style="display:none; position:absolute; top:-6px; right:-4px; background:#ef4444; color:white; font-size:10px; font-weight:900; border-radius:99px; padding:2px 7px;">0</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PO TRACKER PANEL -->
+                <div id="po-tracker-panel" style="display:none; margin-top:0;">
+                    <div class="card" style="padding:0; overflow:hidden;">
+                        <div style="background:linear-gradient(135deg,#059669,#10b981); padding:16px 18px; display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <div style="font-size:15px; font-weight:800; color:white;">📊 Purchase Order Tracker</div>
+                                <div style="font-size:11px; color:rgba(255,255,255,0.8); margin-top:2px;">All saved POs & their status</div>
+                            </div>
+                            <button onclick="closePoTracker()" style="background:rgba(255,255,255,0.2); border:none; color:white; border-radius:8px; width:32px; height:32px; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
+                        </div>
+                        <!-- Stats -->
+                        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:0; border-bottom:1px solid var(--border);">
+                            <div style="padding:12px 6px; text-align:center; border-right:1px solid var(--border);">
+                                <div id="po-stat-total" style="font-size:20px; font-weight:900; color:var(--primary);">0</div>
+                                <div style="font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase;">Total</div>
+                            </div>
+                            <div style="padding:12px 6px; text-align:center; border-right:1px solid var(--border);">
+                                <div id="po-stat-pending" style="font-size:20px; font-weight:900; color:#f59e0b;">0</div>
+                                <div style="font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase;">Pending</div>
+                            </div>
+                            <div style="padding:12px 6px; text-align:center; border-right:1px solid var(--border);">
+                                <div id="po-stat-sent" style="font-size:20px; font-weight:900; color:#3b82f6;">0</div>
+                                <div style="font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase;">Sent</div>
+                            </div>
+                            <div style="padding:12px 6px; text-align:center;">
+                                <div id="po-stat-received" style="font-size:20px; font-weight:900; color:#10b981;">0</div>
+                                <div style="font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase;">Received</div>
+                            </div>
+                        </div>
+                        <!-- Filter tabs -->
+                        <div style="display:flex; gap:0; border-bottom:1px solid var(--border); background:var(--bg);">
+                            <button id="po-tab-all" onclick="filterPoTracker('all')" style="flex:1; padding:10px 4px; border:none; background:var(--primary); color:white; font-size:11px; font-weight:700; cursor:pointer; font-family:'Poppins',sans-serif;">All</button>
+                            <button id="po-tab-pending" onclick="filterPoTracker('pending')" style="flex:1; padding:10px 4px; border:none; background:transparent; color:#f59e0b; font-size:11px; font-weight:700; cursor:pointer; font-family:'Poppins',sans-serif; border-left:1px solid var(--border);">⏳ Draft</button>
+                            <button id="po-tab-sent" onclick="filterPoTracker('sent')" style="flex:1; padding:10px 4px; border:none; background:transparent; color:#3b82f6; font-size:11px; font-weight:700; cursor:pointer; font-family:'Poppins',sans-serif; border-left:1px solid var(--border);">📤 Sent</button>
+                            <button id="po-tab-received" onclick="filterPoTracker('received')" style="flex:1; padding:10px 4px; border:none; background:transparent; color:#10b981; font-size:11px; font-weight:700; cursor:pointer; font-family:'Poppins',sans-serif; border-left:1px solid var(--border);">✅ Received</button>
+                        </div>
+                        <div id="po-tracker-list" style="max-height:420px; overflow-y:auto; padding:12px 14px;">
+                            <div style="text-align:center; color:#94a3b8; font-size:13px; padding:24px;">No purchase orders saved yet.</div>
+                        </div>
+                        <div style="padding:12px 14px; border-top:1px solid var(--border); background:var(--bg);">
+                            <button onclick="saveCurrentPOToTracker()" class="btn btn-success" style="margin-bottom:0; font-size:13px; padding:11px;">💾 Save Current PO to Tracker</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PO Preview -->
+                <div id="po-preview-section" style="display:none; margin-top:0;">
+                    <div id="po-print-zone"></div>
+                </div>
+            </div>
+
+                        <!-- STOCK -->
             <div id="view-stock" class="view">
                 <div class="flex-between" style="margin-bottom:12px; flex-wrap:wrap; gap:10px;">
                     <div>
@@ -4144,6 +4372,18 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
+        // ===== MULTI-TENANT: companyId infrastructure =====
+        let currentCompanyId = null; // set after login
+
+        /** Helper: returns a collection reference scoped to the current company */
+        function cdb(collectionName) {
+            if (!currentCompanyId) throw new Error("No company selected");
+            return db.collection("companies").doc(currentCompanyId).collection(collectionName);
+        }
+
+        /** Super Admin UID — set this after creating your super admin account */
+        const SUPER_ADMIN_UID = "En8AFxwjSYN8ErGUFpDivesAR212";
+
         let userData = {}, cart = [], historyData = [];
         let globalShops = {};
         let globalAreas = []; // Firestore areas collection cache
@@ -4216,6 +4456,7 @@
             { id: 'history', label: '📜 All Orders', view: 'history', roles: ['salesman','manager'], always: true },
             { id: 'billing', label: '🧾 Billing & Invoice', view: 'billing', roles: ['manager'] },
             { id: 'quotation', label: '📋 Quotation Builder', view: 'quotation', roles: ['manager'] },
+            { id: 'po-builder', label: '🛒 Purchase Order Builder', view: 'po-builder', roles: ['manager'] },
             { id: 'sep1', type: 'separator', label: 'Business Ledgers' },
             { id: 'stock', label: '📦 Current Stock', view: 'stock', roles: ['salesman','manager'], always: true },
             { id: 'sales', label: '💰 Sales Ledger', view: 'sales', roles: ['manager'] },
@@ -4646,7 +4887,7 @@
             setTimeout(() => t.style.display = 'none', 3000);
         }
 
-        function toggleCollapse(id) {
+        function toggleCollapseSimple(id) {
             const el = document.getElementById(id);
             const isNone = el.style.display === 'none' || el.style.display === '';
             el.style.display = isNone ? (id === 'managerChartsArea' ? 'grid' : 'block') : 'none';
@@ -4740,19 +4981,62 @@
         // ===== AUTH =====
         auth.onAuthStateChanged(user => {
             if(user) {
-                db.collection("users").doc(user.uid).get().then(doc => {
+                db.collection("users").doc(user.uid).get().then(async doc => {
                     userData = doc.data() || {};
+                    userData.uid = user.uid;
+
+                    // ---- MULTI-TENANT: set companyId ----
+                    if (user.uid === SUPER_ADMIN_UID) {
+                        // Super admin: special handling
+                        currentCompanyId = null;
+                        userData.role = 'superadmin';
+                        userData.name = userData.name || 'Super Admin';
+                        document.getElementById('auth-screen').style.display = 'none';
+                        document.getElementById('app-screen').style.display = 'block';
+                        showSuperAdminPanel();
+                        return;
+                    }
+
+                    // Normal user: get companyId from user doc or localStorage
+                    const companyId = userData.companyId || localStorage.getItem('owm_last_company');
+                    if (!companyId) {
+                        toast("❌ Company Code পাওয়া যায়নি। আবার login করুন।","error");
+                        auth.signOut(); return;
+                    }
+                    // Verify company active
+                    const compDoc = await db.collection("companies").doc(companyId).get();
+                    if (!compDoc.exists || compDoc.data().status === 'suspended') {
+                        toast("⛔ Company active নেই।","error");
+                        auth.signOut(); return;
+                    }
+                    // Verify user belongs to this company
+                    if (userData.companyId && userData.companyId !== companyId) {
+                        toast("❌ এই Company তে আপনার account নেই।","error");
+                        auth.signOut(); return;
+                    }
+                    currentCompanyId = companyId;
+                    // Namespace localStorage keys by company to avoid cross-company data bleed
+                    NOTIF_KEY = 'owm_notifications_v2_' + companyId;
+                    // Save companyId back to user doc if missing
+                    if (!userData.companyId) {
+                        await db.collection("users").doc(user.uid).update({ companyId });
+                        userData.companyId = companyId;
+                    }
+                    // Set company name in header
+                    const compInfo = compDoc.data();
+                    const compNameEl = document.getElementById('headerCompanyName');
+                    if (compNameEl) compNameEl.innerText = compInfo.name || companyId;
+
                     document.getElementById('sideName').innerText = userData.name || "User";
                     document.getElementById('dashWelcomeName').innerText = userData.name || "User";
                     document.getElementById('sideRole').innerText = userData.role || "Role";
-                    // Set avatar initial
+                    // Show company code in sidebar
+                    const sideCompEl = document.getElementById('sideCompanyCode');
+                    if (sideCompEl) sideCompEl.innerText = '🏢 ' + companyId;
                     const avatarEl = document.getElementById('sideAvatar');
                     if (avatarEl) avatarEl.textContent = (userData.name || 'U').charAt(0).toUpperCase();
-                    userData.uid = user.uid;
-                    // Load profile picture if exists
                     setTimeout(() => updateSidebarAvatar(), 100);
                     const isMgr = (userData.role === 'manager');
-                    // Set role class on body for CSS-based hiding
                     document.body.classList.remove('role-salesman', 'role-manager');
                     document.body.classList.add(isMgr ? 'role-manager' : 'role-salesman');
                     document.getElementById('managerChartsWrapper').style.display = isMgr ? 'block' : 'none';
@@ -4763,65 +5047,464 @@
                     renderSidebar();
                     switchView('dashboard');
                     loadData();
-                    userData.uid = user.uid;
                     checkPendingReset(user.uid);
                     updateOnlineStatus();
                 });
             } else {
+                currentCompanyId = null;
                 document.getElementById('auth-screen').style.display = 'flex';
                 document.getElementById('app-screen').style.display = 'none';
             }
         });
 
+        // ===== SUPER ADMIN PANEL =====
+        function showSuperAdminPanel() {
+            // Build a simple super admin overlay
+            let overlay = document.getElementById('superAdminOverlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'superAdminOverlay';
+                overlay.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:3000;overflow-y:auto;padding:20px;font-family:Poppins,sans-serif;';
+                document.body.appendChild(overlay);
+            }
+            overlay.innerHTML = `
+                <div style="max-width:700px;margin:0 auto;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                        <div>
+                            <div style="font-size:22px;font-weight:900;color:var(--text);">🛡️ Super Admin</div>
+                            <div style="font-size:12px;color:#64748b;">All Companies Overview</div>
+                        </div>
+                        <button onclick="auth.signOut();document.getElementById('superAdminOverlay').remove();" style="background:#f43f5e;color:white;border:none;border-radius:10px;padding:8px 16px;cursor:pointer;font-weight:700;font-family:Poppins,sans-serif;">Logout</button>
+                    </div>
+                    <div id="saCompanyList"><div style="text-align:center;padding:40px;color:#64748b;">Loading companies...</div></div>
+                </div>`;
+            overlay.style.display = 'block';
+            loadSuperAdminCompanies();
+        }
+
+        async function loadSuperAdminCompanies() {
+            const listEl = document.getElementById('saCompanyList');
+            if (!listEl) return;
+            try {
+                const snap = await db.collection("companies").orderBy("createdAt","desc").get();
+                if (snap.empty) { listEl.innerHTML = '<div style="text-align:center;padding:40px;color:#64748b;">No companies found.</div>'; return; }
+                let html = `<div style="display:grid;gap:14px;">`;
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    const statusColor = d.status==='active'?'#10b981':d.status==='suspended'?'#f43f5e':'#f59e0b';
+                    const statusLabel = d.status==='active'?'✅ Active':d.status==='suspended'?'⛔ Suspended':'⏳ Pending';
+                    const created = d.createdAt ? d.createdAt.toDate().toLocaleDateString('en-GB') : '—';
+                    const safeId = doc.id.replace(/[^a-zA-Z0-9-]/g,'');
+                    html += `
+                    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.07);">
+                        <!-- Company Header -->
+                        <div style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;user-select:none;" onclick="saToggleUsers('${safeId}')">
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-size:15px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px;">
+                                    🏢 ${d.name || doc.id}
+                                    <span style="font-size:11px;font-weight:700;color:${statusColor};background:${statusColor}22;border-radius:20px;padding:2px 9px;">${statusLabel}</span>
+                                </div>
+                                <div style="font-size:11px;color:#64748b;margin-top:3px;">
+                                    Code: <b style="letter-spacing:1px;color:var(--primary);">${doc.id}</b> &nbsp;•&nbsp; Created: ${created}
+                                </div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                                <span id="sa-arrow-${safeId}" style="font-size:18px;color:#64748b;transition:transform 0.25s;">▸</span>
+                            </div>
+                        </div>
+
+                        <!-- Company Action Buttons -->
+                        <div style="padding:0 18px 14px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid var(--border);">
+                            ${d.status!=='active' ? `<button onclick="saSetStatus('${doc.id}','active')" style="background:#10b98118;color:#10b981;border:1px solid #10b98140;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:12px;font-weight:700;font-family:Poppins,sans-serif;">✅ Activate</button>` : ''}
+                            ${d.status!=='suspended' ? `<button onclick="saSetStatus('${doc.id}','suspended')" style="background:#f43f5e18;color:#f43f5e;border:1px solid #f43f5e40;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:12px;font-weight:700;font-family:Poppins,sans-serif;">⛔ Suspend</button>` : ''}
+                            ${d.status==='pending' ? `<button onclick="saSetStatus('${doc.id}','active')" style="background:#4f46e5;color:white;border:none;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:12px;font-weight:700;font-family:Poppins,sans-serif;">✅ Approve</button>` : ''}
+                            <button onclick="saDeleteCompany('${doc.id}','${(d.name||doc.id).replace(/'/g,"\\'")}');event.stopPropagation();" style="background:#7f1d1d18;color:#ef4444;border:1px solid #ef444440;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:12px;font-weight:700;font-family:Poppins,sans-serif;margin-left:auto;">🗑️ Delete Company</button>
+                        </div>
+
+                        <!-- Users Dropdown (hidden by default) -->
+                        <div id="sa-users-${safeId}" style="display:none;padding:14px 18px;background:var(--bg);">
+                            <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px;">👥 Users</div>
+                            <div id="sa-userlist-${safeId}">
+                                <div style="text-align:center;color:#94a3b8;font-size:12px;padding:16px;">Loading users...</div>
+                            </div>
+                        </div>
+                    </div>`;
+                });
+                html += '</div>';
+                listEl.innerHTML = html;
+            } catch(e) {
+                listEl.innerHTML = '<div style="color:#f43f5e;padding:20px;">Error: ' + e.message + '</div>';
+            }
+        }
+
+        // Toggle user dropdown per company
+        async function saToggleUsers(safeId) {
+            const panel = document.getElementById('sa-users-' + safeId);
+            const arrow = document.getElementById('sa-arrow-' + safeId);
+            if (!panel) return;
+            const isOpen = panel.style.display !== 'none';
+            panel.style.display = isOpen ? 'none' : 'block';
+            if (arrow) arrow.style.transform = isOpen ? '' : 'rotate(90deg)';
+            if (!isOpen) {
+                // Load users for this company
+                await saLoadUsersForCompany(safeId, safeId);
+            }
+        }
+
+        async function saLoadUsersForCompany(safeId, companyId) {
+            const listEl = document.getElementById('sa-userlist-' + safeId);
+            if (!listEl) return;
+            try {
+                const snap = await db.collection('users').where('companyId','==',companyId).get();
+                if (snap.empty) {
+                    listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:12px;">No users found.</div>';
+                    return;
+                }
+                let html = '<div style="display:grid;gap:8px;">';
+                snap.forEach(doc => {
+                    const u = doc.data();
+                    const uid = doc.id;
+                    const roleColor = u.role==='manager'?'#6366f1':'#10b981';
+                    const roleLabel = u.role==='manager'?'👑 Manager':'🧑 Salesman';
+                    const safeName = (u.name||'User').replace(/'/g,"\\'");
+                    html += `
+                    <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+                            <div>
+                                <div style="font-size:13px;font-weight:800;color:var(--text);">${u.name || '—'}</div>
+                                <div style="font-size:11px;color:#64748b;margin-top:2px;">
+                                    @${u.user || '—'} &nbsp;•&nbsp;
+                                    <span style="color:${roleColor};font-weight:700;">${roleLabel}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- User action buttons -->
+                        <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+                            <button onclick="saShowUserPass('${uid}','${safeName}')"
+                                style="background:#4f46e518;color:#6366f1;border:1px solid #6366f140;border-radius:8px;padding:5px 11px;cursor:pointer;font-size:11px;font-weight:700;font-family:Poppins,sans-serif;">
+                                👁️ Show Password
+                            </button>
+                            <button onclick="saChangeUserPass('${uid}','${safeName}','${safeId}')"
+                                style="background:#f59e0b18;color:#d97706;border:1px solid #f59e0b40;border-radius:8px;padding:5px 11px;cursor:pointer;font-size:11px;font-weight:700;font-family:Poppins,sans-serif;">
+                                🔑 Change Password
+                            </button>
+                            <button onclick="saDeleteUser('${uid}','${safeName}','${safeId}')"
+                                style="background:#f43f5e18;color:#f43f5e;border:1px solid #f43f5e40;border-radius:8px;padding:5px 11px;cursor:pointer;font-size:11px;font-weight:700;font-family:Poppins,sans-serif;margin-left:auto;">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </div>`;
+                });
+                html += '</div>';
+                listEl.innerHTML = html;
+            } catch(e) {
+                listEl.innerHTML = '<div style="color:#f43f5e;font-size:12px;padding:10px;">Error: ' + e.message + '</div>';
+            }
+        }
+
+        // Show Password modal for super admin
+        async function saShowUserPass(uid, name) {
+            try {
+                const doc = await db.collection('users').doc(uid).get();
+                if (!doc.exists) return toast('User not found.', 'error');
+                const pass = doc.data().password || doc.data().pass || '—';
+                // Reuse existing showPassModal
+                document.getElementById('showPassModalName').innerText = name;
+                document.getElementById('showPassModalPass').innerText = pass;
+                document.getElementById('showPassModal').style.display = 'flex';
+            } catch(e) { toast('❌ ' + e.message, 'error'); }
+        }
+
+        // Change password modal for super admin
+        let _saChangePassUid = null, _saChangePassSafeId = null;
+        function saChangeUserPass(uid, name, safeId) {
+            _saChangePassUid = uid;
+            _saChangePassSafeId = safeId;
+            // Show a simple inline prompt using existing reset modal
+            resetTargetUid = uid;
+            resetTargetName = name;
+            document.getElementById('resetModalTitle').innerText = '🔑 Change Password';
+            document.getElementById('resetModalSub').innerText = name + ' — Enter a new password';
+            document.getElementById('newPassInput').value = '';
+            document.getElementById('confirmPassInput').value = '';
+            document.getElementById('resetPassModal').style.display = 'flex';
+        }
+
+        // Delete user from super admin
+        async function saDeleteUser(uid, name, safeId) {
+            if (!confirm(`⚠️ Delete user "${name}"?\n\nThis will remove their account data. Cannot be undone.`)) return;
+            try {
+                await db.collection('users').doc(uid).delete();
+                toast(`🗑️ "${name}" deleted.`, 'success');
+                // Reload user list for this company
+                await saLoadUsersForCompany(safeId, safeId);
+            } catch(e) { toast('❌ ' + e.message, 'error'); }
+        }
+
+        async function saSetStatus(companyId, status) {
+            try {
+                await db.collection("companies").doc(companyId).update({ status });
+                toast(`✅ ${companyId} → ${status}`, "success");
+                loadSuperAdminCompanies();
+            } catch(e) { toast(e.message,"error"); }
+        }
+
+        // Pending delete timers — companyId → {timer, cancelled}
+        const _saDeletePending = {};
+
+        async function saDeleteCompany(companyId, companyName) {
+            if (!confirm(`⚠️ "${companyName}" company DELETE করবেন?\n\nসব Orders, Products, Shops, Users মুছে যাবে!\n\nOK চাপলে 5 সেকেন্ড সময় পাবেন UNDO করার।`)) return;
+
+            // যদি আগে থেকে একটা pending থাকে cancel করো
+            if (_saDeletePending[companyId]) {
+                clearTimeout(_saDeletePending[companyId].timer);
+            }
+            _saDeletePending[companyId] = { cancelled: false };
+
+            // Undo toast UI দেখাও
+            const toastId = 'undo-toast-' + companyId;
+            const existing = document.getElementById(toastId);
+            if (existing) existing.remove();
+
+            const undoEl = document.createElement('div');
+            undoEl.id = toastId;
+            undoEl.style.cssText = `
+                position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+                background:#1e293b; color:white; border-radius:14px;
+                padding:14px 20px; z-index:9999; display:flex; align-items:center;
+                gap:14px; box-shadow:0 8px 32px rgba(0,0,0,0.4);
+                font-family:Poppins,sans-serif; font-size:13px; font-weight:600;
+                min-width:280px; border:1px solid rgba(255,255,255,0.1);
+                animation: slideUp 0.3s ease;
+            `;
+            undoEl.innerHTML = `
+                <div style="flex:1;">
+                    <div style="color:#f87171; font-weight:800;">🗑️ "${companyName}" deleting...</div>
+                    <div style="margin-top:6px; background:rgba(255,255,255,0.1); border-radius:99px; height:4px; overflow:hidden;">
+                        <div id="undo-bar-${companyId}" style="height:100%; background:#ef4444; width:100%; transition:width 5s linear; border-radius:99px;"></div>
+                    </div>
+                </div>
+                <button onclick="saUndoDelete('${companyId}')" style="
+                    background:#f59e0b; color:#1e293b; border:none; border-radius:10px;
+                    padding:8px 16px; cursor:pointer; font-weight:900; font-size:13px;
+                    font-family:Poppins,sans-serif; white-space:nowrap; flex-shrink:0;
+                ">↩ UNDO</button>
+            `;
+            document.body.appendChild(undoEl);
+
+            // Progress bar animate — 5 seconds এ শেষ
+            requestAnimationFrame(() => {
+                const bar = document.getElementById('undo-bar-' + companyId);
+                if (bar) { bar.style.width = '0%'; }
+            });
+
+            // 5 seconds পর actual delete
+            _saDeletePending[companyId].timer = setTimeout(async () => {
+                const pending = _saDeletePending[companyId];
+                const el = document.getElementById(toastId);
+                if (el) el.remove();
+                if (!pending || pending.cancelled) return;
+                delete _saDeletePending[companyId];
+
+                // --- Actual delete ---
+                try {
+                    const subCollections = ['orders','products','shops','purchases','returns','due_entries','visits','attendance','shop_notes','areas'];
+                    for (const col of subCollections) {
+                        const snap = await db.collection("companies").doc(companyId).collection(col).get();
+                        if (!snap.empty) {
+                            const batch = db.batch();
+                            snap.docs.forEach(d => batch.delete(d.ref));
+                            await batch.commit();
+                        }
+                    }
+                    const usersSnap = await db.collection("users").where("companyId","==",companyId).get();
+                    if (!usersSnap.empty) {
+                        const userBatch = db.batch();
+                        usersSnap.docs.forEach(d => userBatch.delete(d.ref));
+                        await userBatch.commit();
+                    }
+                    await db.collection("companies").doc(companyId).delete();
+                    toast(`🗑️ "${companyName}" সম্পূর্ণ delete হয়েছে`, "success");
+                    loadSuperAdminCompanies();
+                } catch(e) {
+                    toast("❌ Delete failed: " + e.message, "error");
+                }
+            }, 5000);
+        }
+
+        function saUndoDelete(companyId) {
+            if (_saDeletePending[companyId]) {
+                clearTimeout(_saDeletePending[companyId].timer);
+                _saDeletePending[companyId].cancelled = true;
+                delete _saDeletePending[companyId];
+            }
+            const el = document.getElementById('undo-toast-' + companyId);
+            if (el) {
+                el.style.animation = 'slideDown 0.3s ease forwards';
+                setTimeout(() => el.remove(), 300);
+            }
+            toast("↩ Delete বাতিল হয়েছে!", "success");
+        }
+
         async function loginUser() {
+            const compCode = document.getElementById('loginCompanyCode').value.trim().toUpperCase();
             const user = document.getElementById('loginUsername').value.toLowerCase().trim().replace(/\s/g,'');
             const pass = document.getElementById('loginPassword').value;
-            if(!user||!pass) return toast("Enter username and password","error");
+            if(!user||!pass) return toast("Username ও Password দিন","error");
             const btn = document.getElementById('btnLogin');
             btn.innerText="Processing..."; btn.disabled=true;
             try {
-                await Promise.race([
+                // Sign in first to get UID, then check role
+                const cred = await Promise.race([
                     auth.signInWithEmailAndPassword(user+"@erp.com", pass),
                     new Promise((_,rej) => setTimeout(() => rej(new Error("Timeout")), 10000))
                 ]);
+
+                // If Super Admin — skip company check entirely
+                if (cred.user.uid === SUPER_ADMIN_UID) {
+                    toast("👑 Super Admin Login!","success");
+                    return; // onAuthStateChanged handles the rest
+                }
+
+                // Normal user — company code required
+                if (!compCode) {
+                    await auth.signOut();
+                    btn.innerText="Login"; btn.disabled=false;
+                    return toast("Company Code দিন","error");
+                }
+
+                // Verify company exists and is active
+                const compDoc = await db.collection("companies").doc(compCode).get();
+                if (!compDoc.exists) { await auth.signOut(); toast("❌ Company Code টি সঠিক নয়","error"); return; }
+                const compData = compDoc.data();
+                if (compData.status === 'suspended') { await auth.signOut(); toast("⛔ এই company টি suspend করা হয়েছে।","error"); return; }
+                if (compData.status === 'pending') { await auth.signOut(); toast("⏳ Company টি এখনো approve হয়নি।","error"); return; }
+
+                localStorage.setItem('owm_last_company', compCode);
                 toast("Login Successful!","success");
             } catch(e) {
-                let msg = e.message;
-                if(e.code==='auth/user-not-found') msg="❌ Username not found. Please check and try again.";
-                else if(e.code==='auth/wrong-password') msg="❌ Incorrect password. Please try again.";
-                else if(e.code==='auth/invalid-credential') msg="❌ Incorrect username or password.";
-                else if(e.code==='auth/invalid-email') msg="❌ Invalid username format.";
-                else if(e.code==='auth/too-many-requests') msg="⚠️ Too many failed attempts. Please wait a moment and try again.";
-                else if(e.code==='auth/network-request-failed') msg="📶 No internet connection. Check your network.";
-                else if(e.message==='Timeout') msg="⏱️ Request timed out. Check your connection.";
-                else msg="❌ Login failed. Please check your credentials.";
-                toast(msg,"error");
+                let msg;
+                const code = e.code || '';
+                const rawMsg = (e.message || '').toLowerCase();
+
+                if (e.message === 'Timeout') {
+                    msg = "⏱️ Connection timeout. Please check your internet.";
+                } else if (code === 'auth/network-request-failed' || rawMsg.includes('network')) {
+                    msg = "📶 No internet connection.";
+                } else if (code === 'auth/too-many-requests' || rawMsg.includes('too-many')) {
+                    msg = "⚠️ Too many failed attempts. Please try again later.";
+                } else if (
+                    code === 'auth/invalid-credential' ||
+                    code === 'auth/wrong-password' ||
+                    code === 'auth/user-not-found' ||
+                    code === 'auth/invalid-email' ||
+                    rawMsg.includes('invalid') ||
+                    rawMsg.includes('password') ||
+                    rawMsg.includes('user') ||
+                    rawMsg.includes('credential') ||
+                    rawMsg.includes('no user')
+                ) {
+                    msg = "❌ Incorrect Username or Password.";
+                } else {
+                    msg = "❌ Login failed. Please try again.";
+                }
+                toast(msg, "error");
             } finally { btn.innerText="Login"; btn.disabled=false; }
         }
 
         async function registerUser() {
+            const compCode = document.getElementById('regCompanyCode').value.trim().toUpperCase();
             const name=document.getElementById('regName').value.trim();
             const user=document.getElementById('regUser').value.toLowerCase().trim().replace(/\s/g,'');
             const pass=document.getElementById('regPass').value;
             const role=document.getElementById('regRole').value;
             const pin=document.getElementById('pinBox').value;
+            if(!compCode) return toast("Company Code দিন","error");
             if(!(pin===generateDailyPassword()||checkMasterPassword(pin))) return toast("❌ Invalid registration password!","error");
             if(!name||!user||pass.length<6) return toast("Please fill all details correctly","error");
+            // Verify company exists and is active
+            const compDoc = await db.collection("companies").doc(compCode).get();
+            if (!compDoc.exists) return toast("❌ Company Code সঠিক নয়","error");
+            const compStatus = compDoc.data().status;
+            if (compStatus === 'suspended') return toast("⛔ এই company suspend করা","error");
+            if (compStatus === 'pending') return toast("⏳ Company এখনো approve হয়নি","error");
             document.getElementById('btnReg').innerText="Processing...";
             try {
                 const cred = await auth.createUserWithEmailAndPassword(user+"@erp.com", pass);
-                await db.collection("users").doc(cred.user.uid).set({ name, user, role });
-                toast("Account Created!","success");
+                // Store user doc BEFORE onAuthStateChanged can act on it
+                await db.collection("users").doc(cred.user.uid).set({ name, user, role, companyId: compCode, password: pass });
+                // Sign out immediately — user must log in manually so companyId flows correctly
+                await auth.signOut();
+                toast("✅ Account তৈরি হয়েছে! এখন login করুন।","success");
+                document.getElementById('loginCompanyCode').value = compCode;
+                document.getElementById('loginUsername').value = user;
+                toggleAuthView('login');
             } catch(e) { toast(e.message,"error"); document.getElementById('btnReg').innerText="Create Account"; }
+        }
+
+        // ===== COMPANY REGISTRATION =====
+        async function registerCompany() {
+            const compName = document.getElementById('compRegCompanyName').value.trim();
+            const adminName = document.getElementById('compRegAdminName').value.trim();
+            const user = document.getElementById('compRegUser').value.toLowerCase().trim().replace(/\s/g,'');
+            const pass = document.getElementById('compRegPass').value;
+            const pin = document.getElementById('compRegPin').value;
+            if (!(pin===generateDailyPassword()||checkMasterPassword(pin))) return toast("❌ Invalid registration password!","error");
+            if (!compName||!adminName||!user||pass.length<6) return toast("সব তথ্য ভরুন (password min 6 chars)","error");
+            const btn = document.getElementById('btnCompReg');
+            btn.innerText="Creating..."; btn.disabled=true;
+            try {
+                // Generate unique company code: first 3 letters + random 4 digits
+                const prefix = compName.replace(/[^a-zA-Z]/g,'').substring(0,3).toUpperCase() || 'OWM';
+                const suffix = Math.floor(1000 + Math.random() * 9000);
+                const companyId = prefix + '-' + suffix;
+                // Check uniqueness
+                const existing = await db.collection("companies").doc(companyId).get();
+                if (existing.exists) { toast("Try again — rare collision","error"); btn.innerText="Create Company"; btn.disabled=false; return; }
+                // Create company document
+                await db.collection("companies").doc(companyId).set({
+                    name: compName,
+                    status: 'active', // auto-approved; change to 'pending' if you want manual approval
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                // Create admin Firebase Auth account
+                const cred = await auth.createUserWithEmailAndPassword(user+"@erp.com", pass);
+                // Write users doc IMMEDIATELY before onAuthStateChanged processes login
+                await db.collection("users").doc(cred.user.uid).set({
+                    name: adminName, user, role: 'manager', companyId, password: pass
+                });
+                // Sign out — user logs in manually so the full flow runs cleanly
+                await auth.signOut();
+                // Show company code
+                document.getElementById('compRegCodeValue').innerText = companyId;
+                document.getElementById('compRegCodeDisplay').style.display = 'block';
+                btn.innerText = "✅ Company Created!";
+                toast("🎉 Company তৈরি হয়েছে! Code: " + companyId, "success");
+                localStorage.setItem('owm_last_company', companyId);
+                // Auto-fill login
+                setTimeout(() => {
+                    document.getElementById('loginCompanyCode').value = companyId;
+                    toggleAuthView('login');
+                }, 3000);
+            } catch(e) {
+                toast(e.message,"error");
+                btn.innerText="Create Company"; btn.disabled=false;
+            }
         }
 
         function logoutApp() {
             menuConfig = null;
             auth.signOut().then(() => {
+                currentCompanyId = null;
+                _prevOrderCount = null; // Reset so next login doesn't trigger false notification
+                _prevDeliveredSet = new Set();
+                localStorage.removeItem('owm_last_company');
                 toast("Logged Out", "success");
                 document.body.classList.remove('role-salesman', 'role-manager');
                 historyData = []; allDueData = {}; allReturnsData = []; allVisitsData = [];
                 globalShops = {}; productsMap = {};
+                const headerComp = document.getElementById('headerCompanyName');
+                if (headerComp) headerComp.innerText = '';
             });
         }
         function toggleMenu() {
@@ -4830,8 +5513,10 @@
             document.body.style.overflow = document.getElementById('sidebar').classList.contains('active') ? 'hidden' : '';
         }
         function toggleAuthView(v) {
-            document.getElementById('login-box').style.display = v=='login'?'block':'none';
-            document.getElementById('reg-box').style.display = v=='reg'?'block':'none';
+            document.getElementById('login-box').style.display = v==='login' ? 'block' : 'none';
+            document.getElementById('reg-box').style.display = v==='reg' ? 'block' : 'none';
+            const crb = document.getElementById('company-reg-box');
+            if (crb) crb.style.display = v==='company-reg' ? 'block' : 'none';
         }
         function toggleAuthTheme() {
             const isDark = document.body.classList.toggle('dark-mode');
@@ -4861,7 +5546,8 @@
 
         // ===== LOAD DATA =====
         function loadData() {
-            db.collection("shops").orderBy("name").onSnapshot(snap => {
+            if (!currentCompanyId) { console.warn("loadData: no companyId"); return; }
+            cdb("shops").orderBy("name").onSnapshot(snap => {
                 const sel=document.getElementById('orderShop');
                 const repShop=document.getElementById('repShop');
                 const payRepShop=document.getElementById('payRepShopSel');
@@ -4898,7 +5584,7 @@
                 populateAreaDropdowns();
             });
 
-            db.collection("products").onSnapshot(snap => {
+            cdb("products").onSnapshot(snap => {
                 const orderDatalist=document.getElementById('orderItemDatalist');
                 const repItem=document.getElementById('repItem');
                 const delItem=document.getElementById('delItemSelect');
@@ -4943,7 +5629,7 @@
                 filterStock();
             });
 
-            db.collection("purchases").orderBy("time","desc").limit(100).onSnapshot(snap => {
+            cdb("purchases").orderBy("time","desc").limit(100).onSnapshot(snap => {
                 const pBody=document.getElementById('purchaseTableBody');
                 pBody.innerHTML=''; purchaseDataArray=[];
                 snap.forEach(doc => {
@@ -4961,7 +5647,7 @@
                 });
             });
 
-            db.collection("orders").orderBy("time","desc").onSnapshot(snap => {
+            cdb("orders").orderBy("time","desc").onSnapshot(snap => {
                 const list=document.getElementById('historyList');
                 const salesBody=document.getElementById('salesTableBody');
                 const billSel=document.getElementById('billingSelect');
@@ -5051,13 +5737,13 @@
                 if (typeof notifCheckDuePayments === 'function') notifCheckDuePayments();
             });
 
-            db.collection("shop_notes").orderBy("time","desc").limit(500).onSnapshot(snap => {
+            cdb("shop_notes").orderBy("time","desc").limit(500).onSnapshot(snap => {
                 allShopNotes = [];
                 snap.forEach(doc => { const d = doc.data(); d.docId = doc.id; allShopNotes.push(d); });
                 if (document.getElementById('view-shop-notes')?.classList.contains('active')) renderShopNotes();
             });
 
-            db.collection("due_entries").orderBy("time","desc").onSnapshot(snap => {
+            cdb("due_entries").orderBy("time","desc").onSnapshot(snap => {
                 allDueData={};
                 snap.forEach(doc => {
                     const d=doc.data(); d.docId=doc.id;
@@ -5067,7 +5753,7 @@
                 renderDueList();
             });
 
-            db.collection("returns").orderBy("time","desc").limit(100).onSnapshot(snap => {
+            cdb("returns").orderBy("time","desc").limit(100).onSnapshot(snap => {
                 allReturnsData=[];
                 const rList=document.getElementById('returnHistoryList');
                 rList.innerHTML='';
@@ -5094,7 +5780,7 @@
                 if(!snap.size) rList.innerHTML='<div style="text-align:center;padding:20px;color:#64748b;">No returns yet.</div>';
             });
 
-            db.collection("visits").orderBy("time","desc").limit(300).onSnapshot(snap => {
+            cdb("visits").orderBy("time","desc").limit(300).onSnapshot(snap => {
                 allVisitsData=[];
                 const salesmenSet=new Set(['all']);
                 snap.forEach(doc => { const d=doc.data(); d.docId=doc.id; allVisitsData.push(d); salesmenSet.add(d.salesman); });
@@ -5113,7 +5799,7 @@
             }, 1500);
 
             // ===== AREAS REALTIME LISTENER =====
-            db.collection("areas").orderBy("name").onSnapshot(snap => {
+            cdb("areas").orderBy("name").onSnapshot(snap => {
                 globalAreas = [];
                 snap.forEach(doc => globalAreas.push({ id: doc.id, name: doc.data().name || doc.id }));
                 renderAreaList();
@@ -5218,7 +5904,7 @@
 
             try {
                 const docId = name.replace(/[^a-zA-Z0-9_\u0980-\u09FF\s]/g, '').replace(/\s+/g, '_').toLowerCase();
-                await db.collection('areas').doc(docId).set({ name, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                await cdb('areas').doc(docId).set({ name, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                 if (input) input.value = '';
                 toast(`✅ Area "${name}" added!`, 'success');
             } catch(e) {
@@ -5236,12 +5922,12 @@
             }
 
             try {
-                await db.collection('areas').doc(areaId).update({ name: trimmed });
+                await cdb('areas').doc(areaId).update({ name: trimmed });
                 // Also update all shops that have this area
                 const batch = db.batch();
                 Object.entries(globalShops).forEach(([id, d]) => {
                     if (d.area === oldName) {
-                        batch.update(db.collection('shops').doc(id), { area: trimmed });
+                        batch.update(cdb('shops').doc(id), { area: trimmed });
                     }
                 });
                 await batch.commit();
@@ -5265,22 +5951,22 @@
                     .filter(([id,d]) => d.area === areaName)
                     .map(([id,d]) => id);
 
-                await db.collection('areas').doc(areaId).delete();
+                await cdb('areas').doc(areaId).delete();
                 // Clear area from shops
                 if (shopCount > 0) {
                     const batch = db.batch();
                     affectedShops.forEach(id => {
-                        batch.update(db.collection('shops').doc(id), { area: '' });
+                        batch.update(cdb('shops').doc(id), { area: '' });
                     });
                     await batch.commit();
                 }
                 toast(`🗑️ Area "${areaName}" deleted!`, 'success');
 
                 pushUndo(`Area "${areaName}" deleted`, async () => {
-                    await db.collection('areas').doc(areaId).set({ name: areaName, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                    await cdb('areas').doc(areaId).set({ name: areaName, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
                     if (affectedShops.length) {
                         const batch = db.batch();
-                        affectedShops.forEach(id => batch.update(db.collection('shops').doc(id), { area: areaName }));
+                        affectedShops.forEach(id => batch.update(cdb('shops').doc(id), { area: areaName }));
                         await batch.commit();
                     }
                 });
@@ -5487,14 +6173,14 @@
                         let discount=parseFloat(getExcelVal(row,['Discount','discount','Disc'])||0);
                         if(!pName||isNaN(qty)||qty<=0){errorCount++;continue;}
                         let safeName=pName.toString().trim().replace(/\//g,'-');
-                        const ref=db.collection("products").doc(safeName);
+                        const ref=cdb("products").doc(safeName);
                         const doc=await ref.get();
                         let finalS=doc.exists?(doc.data().stock||0)+qty:qty;
                         let finalP=isNaN(price)?(doc.exists?doc.data().price||0:0):price;
                         let finalCP=(!isNaN(costPrice)&&costPrice>0)?costPrice:(doc.exists?doc.data().costPrice||0:0);
                         let finalD=isNaN(discount)?(doc.exists?doc.data().discount||0:0):discount;
                         await ref.set({stock:finalS,price:finalP,costPrice:finalCP,discount:finalD},{merge:true});
-                        await db.collection("purchases").add({item:safeName,addedStock:qty,price:finalP,costPrice:finalCP,dealer:dealer.toString(),time:firebase.firestore.FieldValue.serverTimestamp()});
+                        await cdb("purchases").add({item:safeName,addedStock:qty,price:finalP,costPrice:finalCP,dealer:dealer.toString(),time:firebase.firestore.FieldValue.serverTimestamp()});
                         successCount++;
                     }
                     if(successCount>0) toast(`Import done! ${successCount} items. (Errors: ${errorCount})`,"success");
@@ -5603,10 +6289,10 @@
             // ---- ONLINE: normal flow ----
             try {
                 for(let i of cart){
-                    const ref=db.collection("products").doc(i.id);
-                    await db.runTransaction(async t=>{const doc=await t.get(ref);t.update(ref,{stock:doc.data().stock-i.qty});});
+                    const ref=cdb("products").doc(i.id);
+                    await db.runTransaction(async t=>{const doc=await t.get(ref);if(!doc.exists) throw new Error(`Product '${i.id}' not found`);const newStock=doc.data().stock-i.qty;if(newStock<0) throw new Error(`'${i.id}' এর stock কম (available: ${doc.data().stock})`);t.update(ref,{stock:newStock});});
                 }
-                await db.collection("orders").add({
+                await cdb("orders").add({
                     shopName:orderObj.shopName, items:orderObj.items,
                     total:orderObj.total, salesman:orderObj.salesman,
                     time:firebase.firestore.FieldValue.serverTimestamp(),
@@ -5633,7 +6319,7 @@
                 let remaining = totalQty;
 
                 // Get purchase docs for this item (no orderBy to avoid index error)
-                const snap = await db.collection("purchases")
+                const snap = await cdb("purchases")
                     .where("item", "==", itemName)
                     .get();
 
@@ -5651,11 +6337,11 @@
 
                     if (docQty <= remaining) {
                         // Delete entire document
-                        await db.collection("purchases").doc(doc.id).delete();
+                        await cdb("purchases").doc(doc.id).delete();
                         remaining -= docQty;
                     } else {
                         // Reduce quantity partially
-                        await db.collection("purchases").doc(doc.id).update({
+                        await cdb("purchases").doc(doc.id).update({
                             addedStock: docQty - remaining
                         });
                         remaining = 0;
@@ -5666,30 +6352,34 @@
         }
 
         async function deleteOrder(idx) {
-            let d=historyData[idx]; if(!d||!d.orderId) return;
+            let d=historyData[idx]; if(!d||!d.orderId) { toast('Order not found — please refresh','error'); return; }
+            // Re-verify from Firestore to prevent stale index issue
+            const freshCheck = await cdb('orders').doc(d.orderId).get();
+            if (!freshCheck.exists) { toast('Order already deleted','error'); return; }
+            d = { ...freshCheck.data(), orderId: d.orderId };
             try{
                 // Save full order data before deletion for undo
-                const orderSnap = await db.collection("orders").doc(d.orderId).get();
+                const orderSnap = await cdb("orders").doc(d.orderId).get();
                 const orderData = orderSnap.exists ? orderSnap.data() : null;
 
                 // Save purchase entries deleted for undo
                 const deletedPurchases = [];
                 for(const item of d.items){
-                    const snap=await db.collection("purchases").where("item","==",item.id).get();
+                    const snap=await cdb("purchases").where("item","==",item.id).get();
                     snap.docs.forEach(doc=>deletedPurchases.push({id:doc.id,data:doc.data()}));
                 }
 
                 await deletePurchasesForSaleItems(d.items);
-                await db.collection("orders").doc(d.orderId).delete();
+                await cdb("orders").doc(d.orderId).delete();
                 toast("🗑️ Order deleted","success");
 
                 const orderId = d.orderId;
                 pushUndo(`Order #${orderId.substring(0,6).toUpperCase()} deleted`, async () => {
                     // Restore order
-                    if(orderData) await db.collection("orders").doc(orderId).set(orderData);
+                    if(orderData) await cdb("orders").doc(orderId).set(orderData);
                     // Restore stock (reverse the purchase deletions)
                     for(const item of d.items){
-                        const ref=db.collection("products").doc(item.id);
+                        const ref=cdb("products").doc(item.id);
                         await db.runTransaction(async t=>{
                             const pDoc=await t.get(ref);
                             if(pDoc.exists) t.update(ref,{stock:pDoc.data().stock+item.qty});
@@ -5700,10 +6390,14 @@
         }
         async function editOrder(idx) {
             if(!confirm("Edit: This will move items back to cart and delete the order. Proceed?")) return;
-            let d=historyData[idx]; if(!d||!d.orderId) return;
+            let d=historyData[idx]; if(!d||!d.orderId) { toast('Order not found — please refresh','error'); return; }
+            // Re-verify from Firestore to prevent stale index issue
+            const freshSnap = await cdb('orders').doc(d.orderId).get();
+            if (!freshSnap.exists) { toast('Order already deleted or changed','error'); return; }
+            d = { ...freshSnap.data(), orderId: d.orderId };
             try{
-                for(let item of d.items){const ref=db.collection("products").doc(item.id);await db.runTransaction(async tr=>{const pDoc=await tr.get(ref);if(pDoc.exists) tr.update(ref,{stock:pDoc.data().stock+item.qty});});}
-                await db.collection("orders").doc(d.orderId).delete();
+                for(let item of d.items){const ref=cdb("products").doc(item.id);await db.runTransaction(async tr=>{const pDoc=await tr.get(ref);if(pDoc.exists) tr.update(ref,{stock:pDoc.data().stock+item.qty});});}
+                await cdb("orders").doc(d.orderId).delete();
                 cart=[...d.items];
                 const sel=document.getElementById('orderShop');
                 for(let i=0;i<sel.options.length;i++){if(sel.options[i].value===d.shopName){sel.selectedIndex=i;break;}}
@@ -5718,7 +6412,7 @@
             if(!n) return toast("Shop name required","error");
             const createdBy = document.getElementById('shopCreatedBy').value || '';
             const area = document.getElementById('shopArea').value.trim();
-            await db.collection("shops").doc(n.replace(/\//g,'-')).set({
+            await cdb("shops").doc(n.replace(/\//g,'-')).set({
                 name: n.replace(/\//g,'-'),
                 phone: document.getElementById('shopPhone').value,
                 addr: document.getElementById('shopAddr').value,
@@ -5740,14 +6434,14 @@
             const cp=parseFloat(document.getElementById('prodCostPrice').value);
             if(!n||isNaN(s)) return toast("Name and valid stock required","error");
             if(n.includes('/')) n=n.replace(/\//g,'-');
-            const ref=db.collection("products").doc(n);
+            const ref=cdb("products").doc(n);
             const doc=await ref.get();
             let finalS=doc.exists?doc.data().stock+s:s;
             let finalP=isNaN(p)?(doc.exists?doc.data().price:0):p;
             let finalCP=isNaN(cp)?(doc.exists?doc.data().costPrice||0:0):cp;
             let finalD=doc.exists?(doc.data().discount||0):0;
             await ref.set({stock:finalS,price:finalP,costPrice:finalCP,discount:finalD},{merge:true});
-            if(s>0) await db.collection("purchases").add({item:n,addedStock:s,price:finalP,costPrice:finalCP,dealer:document.getElementById('purchaseInfo').value,time:firebase.firestore.FieldValue.serverTimestamp()});
+            if(s>0) await cdb("purchases").add({item:n,addedStock:s,price:finalP,costPrice:finalCP,dealer:document.getElementById('purchaseInfo').value,time:firebase.firestore.FieldValue.serverTimestamp()});
             toast("Stock Updated!","success");
             document.getElementById('prodName').value=""; document.getElementById('prodStock').value=""; document.getElementById('prodPrice').value=""; document.getElementById('prodCostPrice').value=""; document.getElementById('purchaseInfo').value="";
         }
@@ -5758,7 +6452,7 @@
             let nCostPrice=prompt(`Edit Purchase/Cost Price for "${id}" (₹):`,oldCostPrice); if(nCostPrice===null) return;
             let nDisc=prompt(`Edit Discount % for "${id}":`,oldDisc); if(nDisc===null) return;
             try{
-                await db.collection("products").doc(id).update({
+                await cdb("products").doc(id).update({
                     stock:parseInt(nStock),
                     price:parseFloat(nPrice),
                     costPrice:parseFloat(nCostPrice)||0,
@@ -5773,39 +6467,39 @@
             let nPrice=prompt(`Edit Selling Price (₹):`,oldPrice); if(nPrice===null) return;
             let nCP=prompt(`Edit Cost Price (₹):`,oldCostPrice); if(nCP===null) return;
             let nDealer=prompt(`Edit Dealer:`,oldDealer); if(nDealer===null) return;
-            try{await db.collection("purchases").doc(docId).update({addedStock:parseInt(nQty),price:parseFloat(nPrice),costPrice:parseFloat(nCP)||0,dealer:nDealer});toast("Updated!","success");}catch(e){toast(e.message,"error");}
+            try{await cdb("purchases").doc(docId).update({addedStock:parseInt(nQty),price:parseFloat(nPrice),costPrice:parseFloat(nCP)||0,dealer:nDealer});toast("Updated!","success");}catch(e){toast(e.message,"error");}
         }
         async function deleteProduct(id) {
             try{
-                const snap = await db.collection("products").doc(id).get();
+                const snap = await cdb("products").doc(id).get();
                 if(!snap.exists) return toast("Product not found","error");
                 const data = snap.data();
-                await db.collection("products").doc(id).delete();
+                await cdb("products").doc(id).delete();
                 toast("🗑️ Product deleted","success");
                 pushUndo(`"${id}" deleted`, async () => {
-                    await db.collection("products").doc(id).set(data);
+                    await cdb("products").doc(id).set(data);
                 });
             }catch(e){toast(e.message,"error");}
         }
         async function deletePurchaseRecord(id) {
             try{
-                const purchDoc=await db.collection("purchases").doc(id).get();
+                const purchDoc=await cdb("purchases").doc(id).get();
                 if(!purchDoc.exists) return toast("Record not found","error");
                 const pData=purchDoc.data();
                 const itemName=pData.item, addedQty=pData.addedStock||0;
                 if(itemName&&addedQty>0){
-                    const prodRef=db.collection("products").doc(itemName);
+                    const prodRef=cdb("products").doc(itemName);
                     await db.runTransaction(async t=>{
                         const prodDoc=await t.get(prodRef);
                         if(prodDoc.exists) t.update(prodRef,{stock:Math.max(0,(prodDoc.data().stock||0)-addedQty)});
                     });
                 }
-                await db.collection("purchases").doc(id).delete();
+                await cdb("purchases").doc(id).delete();
                 toast(`🗑️ Purchase record deleted — stock reduced by ${addedQty}`,"success");
                 pushUndo("Purchase record deleted", async () => {
-                    await db.collection("purchases").doc(id).set(pData);
+                    await cdb("purchases").doc(id).set(pData);
                     if(itemName && addedQty>0){
-                        const prodRef=db.collection("products").doc(itemName);
+                        const prodRef=cdb("products").doc(itemName);
                         await db.runTransaction(async t=>{
                             const prodDoc=await t.get(prodRef);
                             if(prodDoc.exists) t.update(prodRef,{stock:(prodDoc.data().stock||0)+addedQty});
@@ -5818,13 +6512,13 @@
             const shopId=document.getElementById('delShopSelect').value;
             if(!shopId) return toast("Select a shop","error");
             try{
-                const snap = await db.collection("shops").doc(shopId).get();
+                const snap = await cdb("shops").doc(shopId).get();
                 const data = snap.exists ? snap.data() : null;
-                await db.collection("shops").doc(shopId).delete();
+                await cdb("shops").doc(shopId).delete();
                 toast("🗑️ Shop deleted","success");
                 document.getElementById('delShopSelect').value="";
                 pushUndo(`Shop "${shopId}" deleted`, async () => {
-                    if(data) await db.collection("shops").doc(shopId).set(data);
+                    if(data) await cdb("shops").doc(shopId).set(data);
                 });
             }catch(e){toast(e.message,"error");}
         }
@@ -5964,9 +6658,9 @@
                 // If name changed and it's used as doc ID, we need special handling
                 if (newName !== shopId) {
                     // Just update fields; doc ID stays same
-                    await db.collection('shops').doc(shopId).update(updateData);
+                    await cdb('shops').doc(shopId).update(updateData);
                 } else {
-                    await db.collection('shops').doc(shopId).update(updateData);
+                    await cdb('shops').doc(shopId).update(updateData);
                 }
 
                 toast('✅ Shop updated successfully!', 'success');
@@ -6008,7 +6702,7 @@
             const backup = {
                 version: 1,
                 createdAt: new Date().toISOString(),
-                appName: 'Order With Me ERP',
+                appName: 'Order With Me® ERP',
                 collections: {}
             };
 
@@ -6276,7 +6970,7 @@
             const endDate   = new Date(year, month + 1, 0, 23, 59, 59);
 
             try {
-                const snap = await db.collection('orders')
+                const snap = await cdb('orders')
                     .where('time', '>=', firebase.firestore.Timestamp.fromDate(startDate))
                     .where('time', '<=', firebase.firestore.Timestamp.fromDate(endDate))
                     .get();
@@ -6392,7 +7086,7 @@
                         await deletePurchasesForSaleItems(order.items || []);
 
                         // 2. Delete the order document
-                        await db.collection('orders').doc(order.id).delete();
+                        await cdb('orders').doc(order.id).delete();
                         deleted++;
 
                     } catch (orderErr) {
@@ -6525,7 +7219,7 @@
                 for (const item of deliveredItems) {
                     const diff = item.orderedQty - item.qty; // qty NOT delivered = return to stock
                     if (diff > 0) {
-                        const ref = db.collection('products').doc(item.id);
+                        const ref = cdb('products').doc(item.id);
                         await db.runTransaction(async t => {
                             const doc = await t.get(ref);
                             if (doc.exists) t.update(ref, { stock: (doc.data().stock || 0) + diff });
@@ -6533,7 +7227,7 @@
                     }
                 }
 
-                await db.collection('orders').doc(d.orderId).update({
+                await cdb('orders').doc(d.orderId).update({
                     items: deliveredItems,
                     total: parseFloat(deliveredTotal.toFixed(2)),
                     deliveryStatus: 'delivered',
@@ -6645,7 +7339,7 @@
             updateAttDateLabel(dateStr);
             attCurrentData = {};
             try {
-                const snap = await db.collection('attendance').doc(dateStr).get();
+                const snap = await cdb('attendance').doc(dateStr).get();
                 if (snap.exists) {
                     const data = snap.data().records || {};
                     attCurrentData = data;
@@ -6673,7 +7367,7 @@
                 records[u.uid] = attCurrentData[u.uid] || 'present';
             });
             try {
-                await db.collection('attendance').doc(dateStr).set({
+                await cdb('attendance').doc(dateStr).set({
                     date: dateStr,
                     records,
                     savedBy: userData.name,
@@ -6737,7 +7431,7 @@
             toast('Generating report...', 'success');
 
             try {
-                const snap = await db.collection('attendance')
+                const snap = await cdb('attendance')
                     .where('date', '>=', startStr)
                     .where('date', '<=', endStr)
                     .orderBy('date', 'asc')
@@ -6965,14 +7659,14 @@
                 try {
                     // Deduct stock
                     for (let i of item.items) {
-                        const ref = db.collection('products').doc(i.id);
+                        const ref = cdb('products').doc(i.id);
                         await db.runTransaction(async t => {
                             const doc = await t.get(ref);
                             if (doc.exists) t.update(ref, { stock: Math.max(0, doc.data().stock - i.qty) });
                         });
                     }
                     // Save order (without serverTimestamp since we store local time)
-                    await db.collection('orders').add({
+                    await cdb('orders').add({
                         shopName: item.shopName, items: item.items, total: item.total,
                         salesman: item.salesman, time: firebase.firestore.Timestamp.fromDate(new Date(item.localTime)),
                         syncedFromOffline: true
@@ -7019,7 +7713,7 @@
             const d = lastPlacedOrder;
             const rawPhone = document.getElementById('waPhoneInput').value.replace(/[^0-9]/g,'');
             const dateStr = new Date().toLocaleDateString('en-GB');
-            let msg = `🛒 *Order With Me — Invoice*\n━━━━━━━━━━━━━━━━━\n🏪 *Shop:* ${d.shopName}\n📅 *Date:* ${dateStr}\n👤 *Sales Rep:* ${d.salesman}\n━━━━━━━━━━━━━━━━━\n`;
+            let msg = `🛒 *Order With Me® — Invoice*\n━━━━━━━━━━━━━━━━━\n🏪 *Shop:* ${d.shopName}\n📅 *Date:* ${dateStr}\n👤 *Sales Rep:* ${d.salesman}\n━━━━━━━━━━━━━━━━━\n`;
             d.items.forEach((item, i) => {
                 msg += `${i+1}. ${item.id}\n   ${item.qty} × ₹${item.price.toFixed(2)} = ₹${item.total.toFixed(2)}\n`;
             });
@@ -7087,7 +7781,10 @@
             const container = document.getElementById('userListContainer');
             if (!container) return;
             try {
-                const snap = await db.collection('users').orderBy('name').get();
+                // Only load users belonging to current company
+                const snap = await db.collection('users')
+                    .where('companyId', '==', currentCompanyId)
+                    .get();
                 if (snap.empty) {
                     container.innerHTML = '<div style="text-align:center; color:#64748b; font-size:13px; padding:12px;">No users found.</div>';
                     return;
@@ -7149,9 +7846,22 @@
                 const doc = await db.collection('users').doc(uid).get();
                 if (!doc.exists) return toast('❌ User not found.', 'error');
                 const d = doc.data();
-                const pass = d.password || d.pass || '(not stored)';
+                // First check users doc, then check pending_resets for recently changed password
+                let pass = d.password || d.pass || null;
+                if (!pass) {
+                    // Check pending_resets — admin may have just reset it
+                    try {
+                        const prDoc = await db.collection('pending_resets').doc(uid).get();
+                        if (prDoc.exists) pass = prDoc.data().newPassword || null;
+                    } catch(e2) {}
+                }
                 document.getElementById('showPassModalName').innerText = name;
-                document.getElementById('showPassModalPass').innerText = pass;
+                if (pass) {
+                    document.getElementById('showPassModalPass').innerText = pass;
+                } else {
+                    document.getElementById('showPassModalPass').innerHTML =
+                        '<span style="font-size:12px;color:#f59e0b;font-weight:600;letter-spacing:0;">⚠️ Password not saved yet.<br><span style="color:#94a3b8;font-weight:400;">Use Reset Password to set a new one — it will be visible here.</span></span>';
+                }
                 document.getElementById('showPassModal').style.display = 'flex';
             } catch(e) {
                 toast('❌ Failed: ' + e.message, 'error');
@@ -7262,17 +7972,34 @@
             btn.innerText = 'Processing...'; btn.disabled = true;
 
             try {
-                // Save reset request to Firestore
+                // Step 1: Save new password to users doc (so Show Password works)
+                await db.collection('users').doc(resetTargetUid).update({
+                    password: newPass
+                }).catch(async () => {
+                    // If update fails (doc fields issue), use set with merge
+                    await db.collection('users').doc(resetTargetUid).set(
+                        { password: newPass }, { merge: true }
+                    );
+                });
+
+                // Step 2: Save to pending_resets — Firebase Auth updates on user's next login
                 await db.collection('pending_resets').doc(resetTargetUid).set({
                     newPassword: newPass,
-                    resetBy: userData.user,
+                    resetBy: (userData && userData.user) ? userData.user : 'superadmin',
                     resetAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                toast(`✅ ${resetTargetName}'s password reset request saved. The new password will apply on next login.`, 'success');
+                toast(`✅ ${resetTargetName}'s password changed to: ${newPass}`, 'success');
                 closeResetModal();
+                if (typeof loadUserList === 'function') loadUserList();
+                // Reload super admin user list if open
+                if (_saChangePassSafeId) {
+                    await saLoadUsersForCompany(_saChangePassSafeId, _saChangePassSafeId);
+                    _saChangePassSafeId = null;
+                }
             } catch(e) {
                 toast('❌ Reset failed: ' + e.message, 'error');
+                console.error('Password reset error:', e);
             } finally { btn.innerText = '✅ Reset'; btn.disabled = false; }
         }
 
@@ -7295,13 +8022,13 @@
             const itemId=document.getElementById('delItemSelect').value;
             if(!itemId) return toast("Select an item","error");
             try{
-                const snap = await db.collection("products").doc(itemId).get();
+                const snap = await cdb("products").doc(itemId).get();
                 const data = snap.exists ? snap.data() : null;
-                await db.collection("products").doc(itemId).delete();
+                await cdb("products").doc(itemId).delete();
                 toast("🗑️ Item deleted","success");
                 document.getElementById('delItemSelect').value="";
                 pushUndo(`"${itemId}" deleted`, async () => {
-                    if(data) await db.collection("products").doc(itemId).set(data);
+                    if(data) await cdb("products").doc(itemId).set(data);
                 });
             }catch(e){toast(e.message,"error");}
         }
@@ -7313,7 +8040,7 @@
         function applyBrandSettings() {
             // Company name on bill
             const nameEl = document.getElementById('b-companyName');
-            if (nameEl) nameEl.textContent = brandSettings.name || 'Order With Me';
+            if (nameEl) nameEl.textContent = brandSettings.name || 'Order With Me®';
             // Logo on bill
             const logoWrap = document.getElementById('b-logoWrap');
             const logoImg  = document.getElementById('b-logoImg');
@@ -7330,7 +8057,7 @@
             if (fn) fn.textContent = brandSettings.footerNote || '';
             // Populate inputs if visible
             const ni = document.getElementById('brandNameInput');
-            if (ni && !ni.value) ni.value = brandSettings.name || 'Order With Me';
+            if (ni && !ni.value) ni.value = brandSettings.name || 'Order With Me®';
             const fi = document.getElementById('brandFooterInput');
             if (fi && !fi.value) fi.value = brandSettings.footerNote || '';
             // Show current logo preview in manager panel
@@ -7376,7 +8103,7 @@
         }
 
         function saveBrandSettings() {
-            brandSettings.name = document.getElementById('brandNameInput').value.trim() || 'Order With Me';
+            brandSettings.name = document.getElementById('brandNameInput').value.trim() || 'Order With Me®';
             brandSettings.footerNote = document.getElementById('brandFooterInput').value.trim();
             localStorage.setItem('owm_brand', JSON.stringify(brandSettings));
             applyBrandSettings();
@@ -7591,7 +8318,7 @@
             if(!idxStr) return toast("Select an order first","error");
             const d=historyData[parseInt(idxStr)]; if(!d) return;
             const dateStr=d.time?d.time.toDate().toLocaleDateString('en-GB'):'';
-            let msg=`🛒 *Order With Me — Invoice*\n━━━━━━━━━━━━━━━━━\n🏪 *Shop:* ${d.shopName}\n📅 *Date:* ${dateStr}\n👤 *Sales Rep:* ${d.salesman}\n━━━━━━━━━━━━━━━━━\n`;
+            let msg=`🛒 *Order With Me® — Invoice*\n━━━━━━━━━━━━━━━━━\n🏪 *Shop:* ${d.shopName}\n📅 *Date:* ${dateStr}\n👤 *Sales Rep:* ${d.salesman}\n━━━━━━━━━━━━━━━━━\n`;
             d.items.forEach((item,i)=>{msg+=`${i+1}. ${item.id}\n   ${item.qty} × ₹${item.price.toFixed(2)} = ₹${item.total.toFixed(2)}\n`;});
             msg+=`━━━━━━━━━━━━━━━━━\n💰 *Grand Total: ₹${d.total.toFixed(2)}*\n\n_Thank you for your business!_ 🙏`;
             const phone = prompt(
@@ -7810,7 +8537,7 @@
                 if(!confirm(`⚠️ Payment (₹${payment.toFixed(2)}) exceeds the remaining due (₹${remaining.toFixed(2)}). Continue?`)) return;
             }
             try {
-                await db.collection("due_entries").add({
+                await cdb("due_entries").add({
                     shopName: shop, credit: 0, payment, note,
                     salesman: userData.name,
                     time: firebase.firestore.FieldValue.serverTimestamp()
@@ -7830,19 +8557,19 @@
             const amt = parseFloat(newAmt);
             if(isNaN(amt) || amt <= 0) return toast("Invalid amount","error");
             try {
-                await db.collection("due_entries").doc(docId).update({ payment: amt, note: newNote });
+                await cdb("due_entries").doc(docId).update({ payment: amt, note: newNote });
                 toast("✅ Payment entry updated!","success");
             } catch(e) { toast(e.message,"error"); }
         }
 
         async function deleteDueEntry(docId, shopName, paymentAmt) {
             try {
-                const snap = await db.collection("due_entries").doc(docId).get();
+                const snap = await cdb("due_entries").doc(docId).get();
                 const data = snap.exists ? snap.data() : null;
-                await db.collection("due_entries").doc(docId).delete();
+                await cdb("due_entries").doc(docId).delete();
                 toast("🗑️ Payment entry deleted","success");
                 pushUndo(`Payment ₹${paymentAmt.toFixed(2)} deleted`, async () => {
-                    if(data) await db.collection("due_entries").doc(docId).set(data);
+                    if(data) await cdb("due_entries").doc(docId).set(data);
                 });
             } catch(e) { toast(e.message,"error"); }
         }
@@ -7858,7 +8585,7 @@
             );
             if(!amt || isNaN(parseFloat(amt)) || parseFloat(amt) <= 0) return;
             const note = prompt("Note (optional):") || '';
-            db.collection("due_entries").add({
+            cdb("due_entries").add({
                 shopName, credit:0, payment:parseFloat(amt), note,
                 salesman: userData.name,
                 time: firebase.firestore.FieldValue.serverTimestamp()
@@ -7905,7 +8632,7 @@
             doc.rect(0, 0, pw, 28, 'F');
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(16); doc.setFont('helvetica', 'bold');
-            doc.text('ORDER WITH ME', 14, 11);
+            doc.text('ORDER WITH ME®', 14, 11);
             doc.setFontSize(9); doc.setFont('helvetica', 'normal');
             doc.text('Due / Credit Report', 14, 18);
             doc.text('Generated: ' + today, pw - 14, 18, { align: 'right' });
@@ -7960,7 +8687,7 @@
             // Footer note
             const finalY = doc.lastAutoTable.finalY + 6;
             doc.setFontSize(8); doc.setTextColor(148, 163, 184); doc.setFont('helvetica', 'normal');
-            doc.text('Generated by Order With Me ERP', pw - 14, finalY, { align: 'right' });
+            doc.text('Generated by Order With Me® ERP', pw - 14, finalY, { align: 'right' });
 
             doc.save(fileName);
             toast("✅ PDF saved!", "success");
@@ -7996,7 +8723,7 @@
                 doc.rect(0, 0, pw, 28, 'F');
                 doc.setTextColor(255, 255, 255);
                 doc.setFontSize(8); doc.setFont('helvetica', 'bold');
-                doc.text('ORDER WITH ME', 14, 9);
+                doc.text('ORDER WITH ME®', 14, 9);
                 doc.setFontSize(15); doc.setFont('helvetica', 'bold');
                 doc.text(shopName, 14, 20);
                 doc.setFontSize(8); doc.setFont('helvetica', 'normal');
@@ -8097,7 +8824,7 @@
                 doc.setDrawColor(226, 232, 240); doc.setLineWidth(0.3);
                 doc.line(14, ph - 10, pw - 14, ph - 10);
                 doc.setTextColor(148, 163, 184); doc.setFontSize(7); doc.setFont('helvetica', 'normal');
-                doc.text('Order With Me ERP', 14, ph - 6);
+                doc.text('Order With Me® ERP', 14, ph - 6);
                 doc.text('Page ' + (idx + 1) + ' of ' + sorted.length, pw - 14, ph - 6, { align: 'right' });
             });
 
@@ -8128,7 +8855,7 @@
                 doc.rect(0, 0, pw, 28, 'F');
                 doc.setTextColor(255,255,255);
                 doc.setFontSize(16); doc.setFont('helvetica','bold');
-                doc.text('ORDER WITH ME', 14, 11);
+                doc.text('ORDER WITH ME®', 14, 11);
                 doc.setFontSize(9); doc.setFont('helvetica','normal');
                 doc.text('Shop Due Statement', 14, 18);
                 doc.text(`Generated: ${today}`, pw - 14, 18, {align:'right'});
@@ -8276,13 +9003,13 @@
             if(!confirm(`Process return for ${returnItems.length} item(s)? Refund: ₹${refundAmt.toFixed(2)}. Stock will be restored.`)) return;
             try{
                 for(let item of returnItems){
-                    const ref=db.collection("products").doc(item.id);
+                    const ref=cdb("products").doc(item.id);
                     await db.runTransaction(async t=>{const pDoc=await t.get(ref);if(pDoc.exists) t.update(ref,{stock:pDoc.data().stock+item.qty});});
                 }
                 // Save return doc first, then link the due_entry back to it
-                const returnRef = await db.collection("returns").add({orderId:d.orderId,shopName:d.shopName,items:returnItems,refundAmt,reason,salesman:userData.name,time:firebase.firestore.FieldValue.serverTimestamp()});
+                const returnRef = await cdb("returns").add({orderId:d.orderId,shopName:d.shopName,items:returnItems,refundAmt,reason,salesman:userData.name,time:firebase.firestore.FieldValue.serverTimestamp()});
                 if(refundAmt>0){
-                    const dueRef = await db.collection("due_entries").add({shopName:d.shopName,credit:0,payment:refundAmt,note:`Auto: Return refund (${reason||'return'})`,salesman:userData.name,isReturnEntry:true,returnDocId:returnRef.id,time:firebase.firestore.FieldValue.serverTimestamp()});
+                    const dueRef = await cdb("due_entries").add({shopName:d.shopName,credit:0,payment:refundAmt,note:`Auto: Return refund (${reason||'return'})`,salesman:userData.name,isReturnEntry:true,returnDocId:returnRef.id,time:firebase.firestore.FieldValue.serverTimestamp()});
                     // Link the due entry ID back into the return document
                     await returnRef.update({dueEntryId: dueRef.id});
                 }
@@ -8308,7 +9035,7 @@
             const newReason = prompt(`Edit return reason:`, ret.reason || '');
             if(newReason === null) return;
             try {
-                await db.collection("returns").doc(docId).update({ reason: newReason });
+                await cdb("returns").doc(docId).update({ reason: newReason });
                 toast("✅ Return reason updated!","success");
             } catch(e) { toast(e.message,"error"); }
         }
@@ -8316,7 +9043,7 @@
         async function deleteReturn(docId, refundAmt) {
             if(!confirm(`Delete this return? The ₹${refundAmt.toFixed(2)} refund payment will also be reversed from the due/payment ledger.`)) return;
             try {
-                const snap = await db.collection("returns").doc(docId).get();
+                const snap = await cdb("returns").doc(docId).get();
                 if(!snap.exists) return toast("Return not found","error");
                 const data = snap.data();
 
@@ -8324,27 +9051,27 @@
                 let savedDueData = null;
                 let savedDueId = data.dueEntryId || null;
                 if(savedDueId) {
-                    const dueSnap = await db.collection("due_entries").doc(savedDueId).get();
+                    const dueSnap = await cdb("due_entries").doc(savedDueId).get();
                     if(dueSnap.exists) {
                         savedDueData = dueSnap.data();
-                        await db.collection("due_entries").doc(savedDueId).delete();
+                        await cdb("due_entries").doc(savedDueId).delete();
                     }
                 } else {
                     // Fallback: search by returnDocId field for older records
-                    const q = await db.collection("due_entries")
+                    const q = await cdb("due_entries")
                         .where("returnDocId","==",docId)
                         .limit(1).get();
                     if(!q.empty) {
                         savedDueId = q.docs[0].id;
                         savedDueData = q.docs[0].data();
-                        await db.collection("due_entries").doc(savedDueId).delete();
+                        await cdb("due_entries").doc(savedDueId).delete();
                     }
                 }
 
                 // 2. Reverse stock (deduct back what was restored on return)
                 if(data.items && data.items.length) {
                     for(let item of data.items) {
-                        const ref = db.collection("products").doc(item.id);
+                        const ref = cdb("products").doc(item.id);
                         await db.runTransaction(async t => {
                             const pDoc = await t.get(ref);
                             if(pDoc.exists) {
@@ -8356,22 +9083,22 @@
                 }
 
                 // 3. Delete the return document itself
-                await db.collection("returns").doc(docId).delete();
+                await cdb("returns").doc(docId).delete();
                 toast("🗑️ Return deleted & payment reversed","success");
 
                 // 4. Undo support
                 pushUndo(`Return ₹${refundAmt.toFixed(2)} deleted`, async () => {
                     // Restore return doc
-                    await db.collection("returns").doc(docId).set(data);
+                    await cdb("returns").doc(docId).set(data);
                     // Restore due entry
                     if(savedDueId && savedDueData) {
-                        await db.collection("due_entries").doc(savedDueId).set(savedDueData);
-                        await db.collection("returns").doc(docId).update({dueEntryId: savedDueId});
+                        await cdb("due_entries").doc(savedDueId).set(savedDueData);
+                        await cdb("returns").doc(docId).update({dueEntryId: savedDueId});
                     }
                     // Re-restore stock
                     if(data.items && data.items.length) {
                         for(let item of data.items) {
-                            const ref = db.collection("products").doc(item.id);
+                            const ref = cdb("products").doc(item.id);
                             await db.runTransaction(async t => {
                                 const pDoc = await t.get(ref);
                                 if(pDoc.exists) t.update(ref, {stock: pDoc.data().stock + item.qty});
@@ -8532,19 +9259,19 @@
             const note=document.getElementById('visitNote').value.trim();
             if(!shop) return toast("Select a shop","error");
             try{
-                await db.collection("visits").add({shopName:shop,note,salesman:userData.name,time:firebase.firestore.FieldValue.serverTimestamp()});
+                await cdb("visits").add({shopName:shop,note,salesman:userData.name,time:firebase.firestore.FieldValue.serverTimestamp()});
                 toast("Visit logged!","success"); document.getElementById('visitNote').value='';
             }catch(e){toast(e.message,"error");}
         }
 
         async function deleteVisit(docId) {
             try {
-                const snap = await db.collection("visits").doc(docId).get();
+                const snap = await cdb("visits").doc(docId).get();
                 const data = snap.exists ? snap.data() : null;
-                await db.collection("visits").doc(docId).delete();
+                await cdb("visits").doc(docId).delete();
                 toast("🗑️ Visit deleted","success");
                 pushUndo("Visit record deleted", async () => {
-                    if(data) await db.collection("visits").doc(docId).set(data);
+                    if(data) await cdb("visits").doc(docId).set(data);
                 });
             } catch(e) { toast(e.message,"error"); }
         }
@@ -8636,7 +9363,7 @@
             if (!shop) return toast('Please select a shop', 'error');
             if (!text) return toast('Please write a note', 'error');
             try {
-                await db.collection('shop_notes').add({
+                await cdb('shop_notes').add({
                     shopName: shop, text, tag,
                     author: userData.name,
                     time: firebase.firestore.FieldValue.serverTimestamp()
@@ -8648,12 +9375,12 @@
 
         async function deleteShopNote(docId) {
             try {
-                const snap = await db.collection('shop_notes').doc(docId).get();
+                const snap = await cdb('shop_notes').doc(docId).get();
                 const data = snap.exists ? snap.data() : null;
-                await db.collection('shop_notes').doc(docId).delete();
+                await cdb('shop_notes').doc(docId).delete();
                 toast('🗑️ Note deleted', 'success');
                 pushUndo('Shop note deleted', async () => {
-                    if(data) await db.collection('shop_notes').doc(docId).set(data);
+                    if(data) await cdb('shop_notes').doc(docId).set(data);
                 });
             } catch(e) { toast(e.message, 'error'); }
         }
@@ -8817,6 +9544,33 @@
             if(v==='shop-notes') { populateNoteShopSelects(); renderShopNotes(); }
             if(v==='attendance') { initAttendanceView(); }
             if(v==='reports') pwPopulateFilters();
+            if(v==='po-builder') {
+                // Auto-fill buyer name
+                const poBuyerEl = document.getElementById('po-buyerName');
+                if (poBuyerEl && !poBuyerEl.value) {
+                    poBuyerEl.value = (typeof brandSettings !== 'undefined' && brandSettings && brandSettings.name)
+                        ? brandSettings.name
+                        : (userData ? userData.name || '' : '');
+                }
+                // Auto-fill authorized by
+                const poAuthEl = document.getElementById('po-authorizedBy');
+                if (poAuthEl && !poAuthEl.value && userData) poAuthEl.value = userData.name || '';
+                // Set today as default order date
+                const poDateEl = document.getElementById('po-orderDate');
+                if (poDateEl && !poDateEl.value) poDateEl.value = new Date().toISOString().split('T')[0];
+                // Generate default PO number if empty
+                const poNoEl = document.getElementById('po-poNo');
+                if (poNoEl && !poNoEl.value) poNoEl.value = 'PO-' + Date.now().toString().slice(-6);
+                // Add first item row if empty
+                if (!document.querySelector('#poItemsList .po-item-row')) addPoItem();
+                // *** Refresh ALL existing item datalists from productsMap ***
+                refreshPoItemDatalist();
+                // Load tracker badge
+                const allPOs = getPoTracker();
+                const pendingPOs = allPOs.filter(p => p.status === 'pending').length;
+                const poBadge = document.getElementById('po-pending-badge');
+                if (poBadge) { poBadge.style.display = pendingPOs > 0 ? 'block' : 'none'; poBadge.textContent = pendingPOs; }
+            }
             if(v==='quotation') {
                 // Auto-fill salesman from logged-in user
                 document.getElementById('qt-salesman').value = document.getElementById('qt-salesman').value || (userData ? userData.name : '');
@@ -8824,7 +9578,7 @@
                 // Auto-fill company name from brand settings
                 const qtCompanyEl = document.getElementById('qt-companyName');
                 if (qtCompanyEl && !qtCompanyEl.value) {
-                    qtCompanyEl.value = (typeof brandSettings !== 'undefined' && brandSettings.name) ? brandSettings.name : 'Order With Me';
+                    qtCompanyEl.value = (typeof brandSettings !== 'undefined' && brandSettings.name) ? brandSettings.name : 'Order With Me®';
                 }
 
                 // Populate shop/client datalist from globalShops
@@ -8843,13 +9597,15 @@
                     smDl.innerHTML = [...smSet].map(n => `<option value="${n}">`).join('');
                 }
 
-                // Refresh product datalists in existing item rows
+                // Refresh product datalists in existing QT item rows
                 document.querySelectorAll('#qtItemsList .qt-item-row').forEach(row => {
                     const dl = row.querySelector('datalist');
                     if (dl) {
                         dl.innerHTML = Object.keys(productsMap).map(p => `<option value="${p}">`).join('');
                     }
                 });
+                // Refresh product datalists in existing PO item rows
+                if (typeof refreshPoItemDatalist === 'function') refreshPoItemDatalist();
 
                 if (!document.getElementById('qt-quotNo').value) {
                     document.getElementById('qt-quotNo').value = 'QT-' + Date.now().toString().slice(-6);
@@ -9956,7 +10712,7 @@
             const t          = QT_THEMES[qtCurrentTheme] || QT_THEMES.classic;
             const companyName = (document.getElementById('qt-companyName') && document.getElementById('qt-companyName').value.trim())
                 ? document.getElementById('qt-companyName').value.trim()
-                : ((typeof appSettings !== 'undefined' && appSettings && appSettings.companyName) ? appSettings.companyName : ((typeof brandSettings !== 'undefined' && brandSettings && brandSettings.name) ? brandSettings.name : 'Order With Me'));
+                : ((typeof appSettings !== 'undefined' && appSettings && appSettings.companyName) ? appSettings.companyName : ((typeof brandSettings !== 'undefined' && brandSettings && brandSettings.name) ? brandSettings.name : 'Order With Me®'));
 
             let subTotal = items.reduce((s, i) => s + i.total, 0);
             const discAmt   = subTotal * (discPct / 100);
@@ -10071,7 +10827,7 @@
                 <div style="background:${t.accentLight || '#f8faff'};border-top:1px solid ${t.borderColor};padding:7px 16px;text-align:center;font-size:9px;color:#94a3b8;letter-spacing:0.3px;">
                     <div style="font-size:10px;font-weight:700;color:${t.grandColor};margin-bottom:2px;letter-spacing:1px;">✦ THANK YOU FOR YOUR ENQUIRY ✦</div>
                     <div>This is a computer generated quotation. Subject to final confirmation.</div>
-                    <div style="margin-top:1px;color:${t.accentColor};font-weight:700;font-size:8.5px;">Powered by Order With Me ERP</div>
+                    <div style="margin-top:1px;color:${t.accentColor};font-weight:700;font-size:8.5px;">Powered by Order With Me® ERP</div>
                 </div>
             </div>`;
 
@@ -10136,7 +10892,7 @@
             const clientName = document.getElementById('qt-clientName').value.trim() || 'Client';
             const quotNo     = document.getElementById('qt-quotNo').value.trim()     || 'Quotation';
             const companyName= (document.getElementById('qt-companyName')?.value.trim()) ||
-                               (typeof brandSettings !== 'undefined' && brandSettings.name) || 'Order With Me';
+                               (typeof brandSettings !== 'undefined' && brandSettings.name) || 'Order With Me®';
             const validDate  = document.getElementById('qt-validDate').value;
             const salesman   = document.getElementById('qt-salesman').value.trim()   || '';
             const items      = getQtItems();
@@ -10189,7 +10945,7 @@ Best regards,
 ${salesman || companyName}
 ${companyName}
 
-Powered by Order With Me ERP`);
+Powered by Order With Me® ERP`);
 
             // Open Gmail compose with pre-filled subject & body
             // Note: Gmail mailto link — user must manually attach the PDF
@@ -10243,7 +10999,7 @@ Powered by Order With Me ERP`);
             renderQuotation();
             const clientName  = document.getElementById('qt-clientName').value.trim();
             const quotNo      = document.getElementById('qt-quotNo').value.trim() || ('QT-' + Date.now().toString().slice(-6));
-            const companyName = document.getElementById('qt-companyName')?.value.trim() || (typeof brandSettings !== 'undefined' && brandSettings.name) || 'Order With Me';
+            const companyName = document.getElementById('qt-companyName')?.value.trim() || (typeof brandSettings !== 'undefined' && brandSettings.name) || 'Order With Me®';
             const salesman    = document.getElementById('qt-salesman').value.trim();
             const validDate   = document.getElementById('qt-validDate').value;
             const items       = getQtItems();
@@ -10420,7 +11176,7 @@ Powered by Order With Me ERP`);
         // ============================================================
         //  NOTIFICATION ENGINE
         // ============================================================
-        const NOTIF_KEY = 'owm_notifications_v2';
+        let NOTIF_KEY = 'owm_notifications_v2'; // will be namespaced by companyId after login
         let notifFilter = 'all';
         let _prevOrderCount = null;
         let _prevDeliveredSet = new Set();
@@ -10437,6 +11193,31 @@ Powered by Order With Me ERP`);
         }
 
         /* ---- Create a notification ---- */
+        /* ---- Notification Sound (Web Audio API) ---- */
+        function playNotifSound(type) {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const beep = (freq, startT, dur, wave='sine', vol=0.18) => {
+                    const o = ctx.createOscillator();
+                    const g = ctx.createGain();
+                    o.connect(g); g.connect(ctx.destination);
+                    o.type = wave; o.frequency.value = freq;
+                    g.gain.setValueAtTime(0, ctx.currentTime + startT);
+                    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + startT + 0.01);
+                    g.gain.linearRampToValueAtTime(0, ctx.currentTime + startT + dur);
+                    o.start(ctx.currentTime + startT);
+                    o.stop(ctx.currentTime + startT + dur + 0.05);
+                };
+                if (type === 'order')    { beep(880,0,.12); beep(1100,.13,.12); beep(1320,.26,.2); }
+                else if (type==='delivery'){ beep(660,0,.08); beep(880,.1,.08); beep(1100,.2,.08); beep(1320,.3,.15); }
+                else if (type==='payment') { beep(1047,0,.07); beep(1319,.09,.07); beep(1568,.18,.14); }
+                else if (type==='stock')   { beep(440,0,.12,'sawtooth',.12); beep(330,.14,.16,'sawtooth',.1); }
+                else if (type==='due')     { beep(440,0,.1,'square',.1); beep(440,.16,.1,'square',.1); beep(440,.32,.1,'square',.1); }
+                else                       { beep(800,0,.07); beep(1000,.09,.12); }
+                setTimeout(() => ctx.close(), 1200);
+            } catch(e) {}
+        }
+
         function addNotif({ type, title, body, icon, tag, autoRead = false }) {
             const notifs = getNotifs();
             const newN = {
@@ -10452,6 +11233,7 @@ Powered by Order With Me ERP`);
             if (!autoRead) {
                 showNotifToast(icon, title);
                 shakeBell();
+                playNotifSound(type);
             }
         }
 
@@ -10504,7 +11286,22 @@ Powered by Order With Me ERP`);
                 renderNotifList();
                 panel.classList.add('open');
                 backdrop.classList.add('open');
+                // Panel খুললেই সব notification read হয়ে যাবে — badge শূন্য হবে
+                _markAllReadOnOpen();
             }
+        }
+
+        function _markAllReadOnOpen() {
+            const notifs = getNotifs();
+            const hasUnread = notifs.some(n => !n.read);
+            if (!hasUnread) return;
+            const updated = notifs.map(n => ({ ...n, read: true }));
+            saveNotifs(updated);
+            // Badge তাৎক্ষণিক সরিয়ে দেওয়া — list re-render না করে
+            const badge = document.getElementById('notifBadge');
+            const countEl = document.getElementById('notifPanelCount');
+            if (badge) { badge.classList.add('hidden'); badge.textContent = '0'; }
+            if (countEl) countEl.textContent = '0';
         }
         function closeNotifPanel() {
             document.getElementById('notifPanel').classList.remove('open');
@@ -10621,7 +11418,485 @@ Powered by Order With Me ERP`);
         /* ----  WATCHERS: fire notifications based on live data changes ---- */
 
         /* Order watcher — called from inside onSnapshot */
-        function notifWatchOrders(snapDocs) {
+        // =====================================================================
+        // ============= PURCHASE ORDER BUILDER ================================
+        // =====================================================================
+
+        let poCurrentTheme = 'classic';
+        let poItemCount = 0;
+        let poTrackerFilter = 'all';
+        const PO_TRACKER_KEY = 'owm_po_tracker';
+
+        const PO_THEMES = {
+            classic: {
+                headerBg: 'linear-gradient(135deg,#ecfdf5 0%,#a7f3d0 60%,#34d399 100%)',
+                headerColor:'#065f46', accentColor:'#059669', accentLight:'rgba(5,150,105,0.06)',
+                borderColor:'#a7f3d0', badgeBg:'#ecfdf5', badgeColor:'#065f46',
+                grandColor:'#065f46', tableHead:'#ecfdf5', tableHeadColor:'#065f46',
+                headerSvg:`<svg style="position:absolute;bottom:0;left:0;width:100%;height:35px;pointer-events:none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 35" preserveAspectRatio="none"><path d="M0,20 Q50,5 100,18 Q150,30 200,12 L200,35 L0,35Z" fill="rgba(255,255,255,0.2)"/></svg>`
+            },
+            corporate: {
+                headerBg: 'linear-gradient(135deg,#1e3a5f 0%,#2563eb 60%,#60a5fa 100%)',
+                headerColor:'#ffffff', accentColor:'#3b82f6', accentLight:'rgba(59,130,246,0.07)',
+                borderColor:'#bfdbfe', badgeBg:'#eff6ff', badgeColor:'#1d4ed8',
+                grandColor:'#1d4ed8', tableHead:'#eff6ff', tableHeadColor:'#1e3a5f',
+                headerSvg:`<svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0.12;" xmlns="http://www.w3.org/2000/svg"><polygon points="0,0 80,0 0,80" fill="white"/><polygon points="100%,100% 100%,40% 40%,100%" fill="white"/></svg>`
+            },
+            royal: {
+                headerBg: 'linear-gradient(135deg,#1a1a2e 0%,#16213e 60%,#533483 100%)',
+                headerColor:'#f5e6a3', accentColor:'#e2c97e', accentLight:'rgba(226,201,126,0.07)',
+                borderColor:'#3d3167', badgeBg:'#2d2250', badgeColor:'#e2c97e',
+                grandColor:'#533483', tableHead:'#1a1a2e', tableHeadColor:'#e2c97e',
+                headerSvg:`<svg style="position:absolute;inset:0;width:100%;height:100%;opacity:0.12;pointer-events:none;" xmlns="http://www.w3.org/2000/svg"><polygon points="0,0 60,0 0,60" fill="#e2c97e"/><polygon points="100%,100% 100%,60% 60%,100%" fill="#e2c97e"/></svg>`
+            },
+            crimson: {
+                headerBg:'linear-gradient(135deg,#7f1d1d 0%,#dc2626 70%,#f87171 100%)',
+                headerColor:'#fff1f2', accentColor:'#ef4444', accentLight:'rgba(239,68,68,0.06)',
+                borderColor:'#fecaca', badgeBg:'#fff1f2', badgeColor:'#991b1b',
+                grandColor:'#991b1b', tableHead:'#fff1f2', tableHeadColor:'#7f1d1d',
+                headerSvg:`<svg style="position:absolute;top:0;right:0;width:80px;height:80px;opacity:0.15;pointer-events:none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><circle cx="80" cy="0" r="60" fill="white"/></svg>`
+            },
+            ocean: {
+                headerBg:'linear-gradient(135deg,#0c4a6e 0%,#0284c7 60%,#38bdf8 100%)',
+                headerColor:'#ffffff', accentColor:'#0ea5e9', accentLight:'rgba(14,165,233,0.07)',
+                borderColor:'#bae6fd', badgeBg:'#f0f9ff', badgeColor:'#0369a1',
+                grandColor:'#0369a1', tableHead:'#f0f9ff', tableHeadColor:'#0c4a6e',
+                headerSvg:`<svg style="position:absolute;bottom:0;left:0;width:100%;height:35px;pointer-events:none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 35" preserveAspectRatio="none"><path d="M0,20 Q40,5 80,18 Q120,30 160,15 Q180,8 200,20 L200,35 L0,35Z" fill="rgba(255,255,255,0.15)"/><path d="M0,28 Q50,18 100,25 Q150,32 200,22 L200,35 L0,35Z" fill="rgba(255,255,255,0.1)"/></svg>`
+            },
+            gold: {
+                headerBg:'linear-gradient(135deg,#78350f 0%,#d97706 60%,#fcd34d 100%)',
+                headerColor:'#fffbeb', accentColor:'#d97706', accentLight:'rgba(217,119,6,0.07)',
+                borderColor:'#fde68a', badgeBg:'#fffbeb', badgeColor:'#b45309',
+                grandColor:'#b45309', tableHead:'#fffbeb', tableHeadColor:'#78350f',
+                headerSvg:`<svg style="position:absolute;bottom:0;right:0;width:70px;height:70px;opacity:0.18;pointer-events:none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 70"><polygon points="70,0 70,70 0,70" fill="white"/></svg>`
+            },
+            slate: {
+                headerBg:'linear-gradient(135deg,#0f172a 0%,#1e293b 70%,#475569 100%)',
+                headerColor:'#f1f5f9', accentColor:'#64748b', accentLight:'rgba(100,116,139,0.07)',
+                borderColor:'#475569', badgeBg:'#1e293b', badgeColor:'#94a3b8',
+                grandColor:'#334155', tableHead:'#f8fafc', tableHeadColor:'#0f172a',
+                headerSvg:`<svg style="position:absolute;inset:0;width:100%;height:100%;opacity:0.08;pointer-events:none;" xmlns="http://www.w3.org/2000/svg"><line x1="0" y1="0" x2="100%" y2="100%" stroke="white" stroke-width="1"/><line x1="100%" y1="0" x2="0" y2="100%" stroke="white" stroke-width="0.5"/></svg>`
+            },
+            violet: {
+                headerBg:'linear-gradient(135deg,#2e1065 0%,#7c3aed 60%,#c4b5fd 100%)',
+                headerColor:'#faf5ff', accentColor:'#7c3aed', accentLight:'rgba(124,58,237,0.07)',
+                borderColor:'#ddd6fe', badgeBg:'#f5f3ff', badgeColor:'#6d28d9',
+                grandColor:'#6d28d9', tableHead:'#f5f3ff', tableHeadColor:'#4c1d95',
+                headerSvg:`<svg style="position:absolute;inset:0;width:100%;height:100%;opacity:0.1;pointer-events:none;" xmlns="http://www.w3.org/2000/svg"><polygon points="100%,0 100%,100% 40%,0" fill="white"/></svg>`
+            }
+        };
+
+        function selectPoTheme(el, theme) {
+            document.querySelectorAll('.po-theme-btn').forEach(b => {
+                b.classList.remove('active-po-theme');
+                b.style.border = '2px solid var(--border)';
+                b.style.boxShadow = 'none';
+            });
+            el.classList.add('active-po-theme');
+            el.style.border = '2.5px solid #059669';
+            el.style.boxShadow = '0 0 0 2px rgba(5,150,105,0.2)';
+            poCurrentTheme = theme;
+            renderPO();
+        }
+
+        function refreshPoItemDatalist() {
+            // Refresh datalist in ALL existing PO item rows from current productsMap
+            const productOptions = Object.keys(productsMap || {}).map(p => `<option value="${p}">`).join('');
+            document.querySelectorAll('#poItemsList .po-item-row').forEach(row => {
+                const dl = row.querySelector('datalist');
+                if (dl) dl.innerHTML = productOptions;
+            });
+        }
+
+        function addPoItem() {
+            const id = 'po-item-' + (++poItemCount);
+            const dlId = id + '-dl';
+            const container = document.getElementById('poItemsList');
+            const row = document.createElement('div');
+            row.className = 'po-item-row';
+            row.id = id;
+            row.innerHTML = `
+                <input class="input-field po-item-name" list="${dlId}" placeholder="Product / item name" oninput="poItemNameInput(this)" onchange="poItemNameSelect(this)" style="margin-bottom:0;">
+                <datalist id="${dlId}">${Object.keys(productsMap||{}).map(p => `<option value="${p}">`).join('')}</datalist>
+                <input class="input-field po-item-qty" type="number" min="1" value="1" placeholder="Qty" oninput="renderPO()" style="margin-bottom:0;">
+                <input class="input-field po-item-rate" type="number" min="0" value="" placeholder="Rate ₹" oninput="renderPO()" style="margin-bottom:0;">
+                <button class="po-item-del" onclick="removePoItem('${id}')">✕</button>`;
+            container.appendChild(row);
+            renderPO();
+        }
+
+        function poItemNameInput(el) { renderPO(); }
+        function poItemNameSelect(el) {
+            const name = el.value.trim();
+            if (productsMap && productsMap[name]) {
+                const row = el.closest('.po-item-row');
+                if (row) {
+                    const rateInput = row.querySelector('.po-item-rate');
+                    if (rateInput && (!rateInput.value || rateInput.value == '0')) {
+                        rateInput.value = productsMap[name].costPrice || productsMap[name].price || '';
+                    }
+                }
+            }
+            renderPO();
+        }
+
+        function removePoItem(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+            renderPO();
+        }
+
+        function getPoItems() {
+            const rows = document.querySelectorAll('#poItemsList .po-item-row');
+            const items = [];
+            rows.forEach(row => {
+                const name = row.querySelector('.po-item-name').value.trim();
+                const qty  = parseFloat(row.querySelector('.po-item-qty').value) || 0;
+                const rate = parseFloat(row.querySelector('.po-item-rate').value) || 0;
+                if (name) items.push({ name, qty, rate, total: qty * rate });
+            });
+            return items;
+        }
+
+        function renderPO() {
+            const buyerName    = document.getElementById('po-buyerName').value || 'Buyer Company';
+            const supplierName = document.getElementById('po-supplierName').value || 'Supplier Name';
+            const poNo         = document.getElementById('po-poNo').value || ('PO-' + Date.now().toString().slice(-6));
+            const orderDate    = document.getElementById('po-orderDate').value;
+            const delivDate    = document.getElementById('po-deliveryDate').value;
+            const payTerms     = document.getElementById('po-paymentTerms').value;
+            const delivAddr    = document.getElementById('po-deliveryAddr').value || '—';
+            const authorizedBy = document.getElementById('po-authorizedBy').value || '';
+            const terms        = document.getElementById('po-terms').value;
+            const discPct      = parseFloat(document.getElementById('po-discount').value) || 0;
+            const taxPct       = parseFloat(document.getElementById('po-tax').value) || 0;
+            const items        = getPoItems();
+            const t            = PO_THEMES[poCurrentTheme] || PO_THEMES.classic;
+
+            let subTotal = items.reduce((s, i) => s + i.total, 0);
+            const discAmt    = subTotal * (discPct / 100);
+            const afterDisc  = subTotal - discAmt;
+            const taxAmt     = afterDisc * (taxPct / 100);
+            const grandTotal = afterDisc + taxAmt;
+
+            const today   = new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+            const ordStr  = orderDate ? new Date(orderDate).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : today;
+            const delStr  = delivDate ? new Date(delivDate).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+
+            let itemRows = '';
+            if (!items.length) {
+                itemRows = `<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:20px;font-size:12px;">No items added yet</td></tr>`;
+            } else {
+                items.forEach((item, sl) => {
+                    const evenBg = sl % 2 === 1 ? 'background:#f8faff;' : 'background:#ffffff;';
+                    itemRows += `<tr>
+                        <td style="${evenBg}text-align:center;color:#94a3b8;font-size:10px;width:28px;padding:9px 6px;border:1px solid #e2e8f0;">${sl+1}</td>
+                        <td style="${evenBg}font-weight:700;font-size:12px;color:#1a1a2e;padding:9px 10px;border:1px solid #e2e8f0;">${item.name}</td>
+                        <td style="${evenBg}text-align:right;white-space:nowrap;color:#1a1a2e;padding:9px 10px;border:1px solid #e2e8f0;">₹${item.rate.toFixed(2)}</td>
+                        <td style="${evenBg}text-align:center;font-weight:700;color:#1a1a2e;padding:9px 10px;border:1px solid #e2e8f0;">${item.qty}</td>
+                        <td style="${evenBg}text-align:right;font-weight:800;color:#1a1a2e;white-space:nowrap;padding:9px 10px;border:1px solid #e2e8f0;">₹${item.total.toFixed(2)}</td>
+                    </tr>`;
+                });
+            }
+
+            let extraRows = '';
+            if (discPct > 0) extraRows += `<div style="display:flex;justify-content:flex-end;gap:16px;padding:2px 0;font-size:11px;"><span style="color:#64748b;">Discount (${discPct}%)</span><span style="font-weight:700;color:#ef4444;min-width:90px;text-align:right;">- ₹${discAmt.toFixed(2)}</span></div>`;
+            if (taxPct  > 0) extraRows += `<div style="display:flex;justify-content:flex-end;gap:16px;padding:2px 0;font-size:11px;"><span style="color:#64748b;">Tax / GST (${taxPct}%)</span><span style="font-weight:700;color:#047857;min-width:90px;text-align:right;">+ ₹${taxAmt.toFixed(2)}</span></div>`;
+
+            const termsHtml = terms
+                ? `<div style="margin:0;padding:10px 20px;background:${t.accentLight};border-top:1px dashed ${t.borderColor};font-size:10px;color:#475569;line-height:1.7;font-family:Arial,sans-serif;"><strong style="color:${t.accentColor};">📝 Terms & Conditions:</strong><br>${terms.replace(/\n/g,'<br>')}</div>`
+                : '';
+
+            const html = `
+            <div id="po-doc-inner" style="max-width:560px;margin:0 auto;font-family:Arial,sans-serif;border-radius:14px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,0.14);border:1px solid ${t.borderColor};background:#ffffff;">
+
+                <!-- HEADER -->
+                <div style="background:${t.headerBg};color:${t.headerColor};padding:10px 18px 9px;position:relative;overflow:hidden;">
+                    ${t.headerSvg || ''}
+                    <div style="position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;">
+                        <div>
+                            <div style="font-size:16px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:${t.headerColor};margin:0 0 1px;">${buyerName}</div>
+                            <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;opacity:0.7;color:${t.headerColor};">PURCHASE ORDER</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:13px;font-weight:900;letter-spacing:1px;color:${t.accentColor};background:rgba(255,255,255,0.18);padding:2px 8px;border-radius:8px;">${poNo}</div>
+                            <div style="font-size:8.5px;opacity:0.75;margin-top:3px;color:${t.headerColor};">Date: ${ordStr}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- INFO STRIPS -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-bottom:1px solid #e2e8f0;">
+                    <div style="padding:10px 16px;border-right:1px solid #e2e8f0;">
+                        <div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Vendor / Supplier</div>
+                        <div style="font-size:13px;font-weight:800;color:#1a1a2e;">${supplierName}</div>
+                    </div>
+                    <div style="padding:10px 16px;">
+                        <div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Delivery To</div>
+                        <div style="font-size:12px;font-weight:700;color:#1a1a2e;">${delivAddr}</div>
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;background:#f8faff;border-bottom:1px solid #e2e8f0;">
+                    <div style="padding:8px 12px;border-right:1px solid #e2e8f0;">
+                        <div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.8px;">Payment Terms</div>
+                        <div style="font-size:11px;font-weight:800;color:${t.accentColor};margin-top:2px;">${payTerms}</div>
+                    </div>
+                    <div style="padding:8px 12px;border-right:1px solid #e2e8f0;">
+                        <div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.8px;">Order Date</div>
+                        <div style="font-size:11px;font-weight:700;color:#1a1a2e;margin-top:2px;">${ordStr}</div>
+                    </div>
+                    <div style="padding:8px 12px;">
+                        <div style="font-size:8px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.8px;">Expected Delivery</div>
+                        <div style="font-size:11px;font-weight:700;color:#1a1a2e;margin-top:2px;">${delStr}</div>
+                    </div>
+                </div>
+
+                <!-- ITEMS TABLE -->
+                <table style="width:100%;border-collapse:collapse;font-size:11px;margin:0;">
+                    <thead>
+                        <tr style="background:${t.tableHead};">
+                            <th style="padding:7px 6px;font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;border:1px solid #cbd5e1;color:${t.tableHeadColor};width:28px;text-align:center;">Sl</th>
+                            <th style="padding:7px 9px;font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;border:1px solid #cbd5e1;color:${t.tableHeadColor};text-align:left;">Description</th>
+                            <th style="padding:7px 9px;font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;border:1px solid #cbd5e1;color:${t.tableHeadColor};text-align:right;">Unit Price (₹)</th>
+                            <th style="padding:7px 9px;font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;border:1px solid #cbd5e1;color:${t.tableHeadColor};text-align:center;">Qty</th>
+                            <th style="padding:7px 9px;font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;border:1px solid #cbd5e1;color:${t.tableHeadColor};text-align:right;">Amount (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody>${itemRows}</tbody>
+                </table>
+
+                <!-- TOTALS -->
+                <div style="padding:8px 14px 10px;border-top:2px solid #1a1a2e;background:#fff;">
+                    <div style="display:flex;justify-content:flex-end;gap:16px;padding:2px 0;font-size:11px;">
+                        <span style="color:#64748b;">Sub Total</span>
+                        <span style="font-weight:700;color:#1a1a2e;min-width:90px;text-align:right;">₹${subTotal.toFixed(2)}</span>
+                    </div>
+                    ${extraRows}
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:6px;border-top:1.5px dashed #c7d2e0;">
+                        <span style="font-size:12px;font-weight:800;color:#1a1a2e;text-transform:uppercase;letter-spacing:0.5px;">Grand Total</span>
+                        <span style="font-size:18px;font-weight:900;color:${t.grandColor};">₹ ${grandTotal.toFixed(2)}</span>
+                    </div>
+                </div>
+
+                ${termsHtml}
+
+                <!-- SIGNATURE ROW -->
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;padding:12px 16px 10px;">
+                    <div style="text-align:center;">
+                        <div style="border-top:1px solid #c7d2e0;padding-top:4px;margin-top:24px;font-size:9px;color:#64748b;">Prepared By</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="border-top:1px solid #c7d2e0;padding-top:4px;margin-top:24px;font-size:9px;color:#64748b;">Authorized By${authorizedBy ? '<br><strong style=\"color:#1a1a2e;\">' + authorizedBy + '</strong>' : ''}</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="border-top:1px solid #c7d2e0;padding-top:4px;margin-top:24px;font-size:9px;color:#64748b;">Supplier Acceptance</div>
+                    </div>
+                </div>
+
+                <!-- FOOTER -->
+                <div style="background:${t.accentLight||'#f8faff'};border-top:1px solid ${t.borderColor};padding:7px 16px;text-align:center;font-size:9px;color:#94a3b8;letter-spacing:0.3px;">
+                    <div style="font-size:10px;font-weight:700;color:${t.grandColor};margin-bottom:2px;letter-spacing:1px;">✦ OFFICIAL PURCHASE ORDER ✦</div>
+                    <div>This is a computer generated purchase order. Please acknowledge receipt.</div>
+                    <div style="margin-top:1px;color:${t.accentColor};font-weight:700;font-size:8.5px;">Powered by Order With Me® ERP</div>
+                </div>
+            </div>`;
+
+            document.getElementById('po-print-zone').innerHTML = html;
+            document.getElementById('po-preview-section').style.display = 'block';
+        }
+
+        function printPO() {
+            renderPO();
+            const styleEl = document.getElementById('print-page-style') || (() => { const s = document.createElement('style'); s.id='print-page-style'; document.head.appendChild(s); return s; })();
+            styleEl.textContent = `@page { size: A5; margin: 6mm; } @media print { body > *:not(#po-print-zone) { display:none !important; } #po-print-zone { display:block !important; } }`;
+            setTimeout(() => window.print(), 150);
+        }
+
+        function downloadPoPDF() {
+            renderPO();
+            const zone = document.getElementById('po-doc-inner');
+            if (!zone) { toast('Please preview first!', 'error'); return; }
+            toast('⏳ Generating PDF...');
+            const orig = { shadow: zone.style.boxShadow, radius: zone.style.borderRadius };
+            zone.style.boxShadow = 'none'; zone.style.borderRadius = '0';
+            const poNo = document.getElementById('po-poNo').value || 'PurchaseOrder';
+            html2pdf().set({
+                margin: 0, filename: 'PO_' + poNo + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2.5, useCORS: true, backgroundColor: '#ffffff', logging: false, scrollX: 0, scrollY: 0 },
+                jsPDF: { unit: 'mm', format: 'a5', orientation: 'portrait' },
+                pagebreak: { mode: 'avoid-all' }
+            }).from(zone).save().then(() => {
+                zone.style.boxShadow = orig.shadow; zone.style.borderRadius = orig.radius;
+                toast('✅ PO PDF saved!', 'success');
+            }).catch(() => {
+                zone.style.boxShadow = orig.shadow; zone.style.borderRadius = orig.radius;
+                toast('❌ PDF failed. Try again.', 'error');
+            });
+        }
+
+        function sendPOViaGmail() {
+            renderPO();
+            const zone = document.getElementById('po-doc-inner');
+            if (!zone) { toast('Please Preview first!', 'error'); return; }
+            const supplier  = document.getElementById('po-supplierName').value.trim() || 'Supplier';
+            const poNo      = document.getElementById('po-poNo').value.trim() || 'PO';
+            const buyer     = document.getElementById('po-buyerName').value.trim() || 'Buyer';
+            const payTerms  = document.getElementById('po-paymentTerms').value;
+            const delivDate = document.getElementById('po-deliveryDate').value;
+            const items     = getPoItems();
+            const discPct   = parseFloat(document.getElementById('po-discount').value) || 0;
+            const taxPct    = parseFloat(document.getElementById('po-tax').value) || 0;
+            let sub = items.reduce((s, i) => s + i.total, 0);
+            const disc = sub * discPct / 100;
+            const tax  = (sub - disc) * taxPct / 100;
+            const grand = sub - disc + tax;
+            const subject = encodeURIComponent(`Purchase Order ${poNo} from ${buyer}`);
+            let body = `Dear ${supplier},\n\nPlease find below our Purchase Order ${poNo}.\n\n`;
+            body += `ITEMS:\n`;
+            items.forEach((it, i) => { body += `${i+1}. ${it.name} — Qty: ${it.qty} × ₹${it.rate} = ₹${it.total.toFixed(2)}\n`; });
+            body += `\nSub Total: ₹${sub.toFixed(2)}`;
+            if (discPct > 0) body += `\nDiscount (${discPct}%): -₹${disc.toFixed(2)}`;
+            if (taxPct  > 0) body += `\nTax/GST (${taxPct}%): +₹${tax.toFixed(2)}`;
+            body += `\nGRAND TOTAL: ₹${grand.toFixed(2)}`;
+            body += `\n\nPayment Terms: ${payTerms}`;
+            if (delivDate) body += `\nExpected Delivery: ${new Date(delivDate).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}`;
+            body += `\n\nKindly acknowledge receipt of this order.\n\nWarm Regards,\n${buyer}`;
+            window.open(`https://mail.google.com/mail/?view=cm&su=${subject}&body=${encodeURIComponent(body)}`, '_blank');
+        }
+
+        // ---- PO Tracker ----
+        function getPoTracker() {
+            try { return JSON.parse(localStorage.getItem(PO_TRACKER_KEY) || '[]'); } catch(e) { return []; }
+        }
+        function savePoTracker(arr) {
+            localStorage.setItem(PO_TRACKER_KEY, JSON.stringify(arr.slice(0, 200)));
+        }
+
+        function saveCurrentPOToTracker() {
+            renderPO();
+            const items = getPoItems();
+            if (!items.length) { toast('Please add items first!', 'error'); return; }
+            const poNo    = document.getElementById('po-poNo').value.trim() || ('PO-' + Date.now().toString().slice(-6));
+            const discPct = parseFloat(document.getElementById('po-discount').value) || 0;
+            const taxPct  = parseFloat(document.getElementById('po-tax').value) || 0;
+            let sub = items.reduce((s,i) => s + i.total, 0);
+            const disc = sub * discPct / 100;
+            const grand = (sub - disc) * (1 + taxPct / 100);
+            const rec = {
+                poNo, status: 'pending',
+                supplier: document.getElementById('po-supplierName').value || '—',
+                buyer:    document.getElementById('po-buyerName').value || '—',
+                payTerms: document.getElementById('po-paymentTerms').value,
+                delivDate: document.getElementById('po-deliveryDate').value,
+                items, grand, savedAt: Date.now()
+            };
+            const arr = getPoTracker();
+            const existIdx = arr.findIndex(p => p.poNo === poNo);
+            if (existIdx >= 0) arr[existIdx] = rec; else arr.unshift(rec);
+            savePoTracker(arr);
+            renderPoTrackerList();
+            toast('✅ PO saved to Tracker!', 'success');
+            openPoTracker();
+        }
+
+        function openPoTracker() {
+            document.getElementById('po-tracker-panel').style.display = 'block';
+            renderPoTrackerList();
+            document.getElementById('po-tracker-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        function closePoTracker() { document.getElementById('po-tracker-panel').style.display = 'none'; }
+
+        function filterPoTracker(f) {
+            poTrackerFilter = f;
+            ['all','pending','sent','received'].forEach(tab => {
+                const el = document.getElementById('po-tab-' + tab);
+                if (el) { el.style.background = f === tab ? 'var(--primary)' : 'transparent'; el.style.color = f === tab ? 'white' : (tab==='pending'?'#f59e0b':tab==='sent'?'#3b82f6':tab==='received'?'#10b981':'var(--text)'); }
+            });
+            renderPoTrackerList();
+        }
+
+        function renderPoTrackerList() {
+            const all = getPoTracker();
+            const filtered = poTrackerFilter === 'all' ? all : all.filter(p => p.status === poTrackerFilter);
+            // Stats
+            document.getElementById('po-stat-total').textContent    = all.length;
+            document.getElementById('po-stat-pending').textContent  = all.filter(p => p.status === 'pending').length;
+            document.getElementById('po-stat-sent').textContent     = all.filter(p => p.status === 'sent').length;
+            document.getElementById('po-stat-received').textContent = all.filter(p => p.status === 'received').length;
+            // Badge
+            const pendingCount = all.filter(p => p.status === 'pending').length;
+            const badge = document.getElementById('po-pending-badge');
+            if (badge) { badge.style.display = pendingCount > 0 ? 'block' : 'none'; badge.textContent = pendingCount; }
+            const listEl = document.getElementById('po-tracker-list');
+            if (!filtered.length) { listEl.innerHTML = '<div style="text-align:center;color:#94a3b8;font-size:13px;padding:24px;">No POs found.</div>'; return; }
+            const statusColors = { pending: '#f59e0b', sent: '#3b82f6', received: '#10b981', cancelled: '#f43f5e' };
+            const statusLabels = { pending: '⏳ Draft', sent: '📤 Sent', received: '✅ Received', cancelled: '❌ Cancelled' };
+            listEl.innerHTML = filtered.map((po, i) => {
+                const realIdx = all.indexOf(po);
+                const date = po.savedAt ? new Date(po.savedAt).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+                const clr = statusColors[po.status] || '#64748b';
+                return `<div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:13px 14px;margin-bottom:10px;">
+                    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:13px;font-weight:800;color:var(--text);">${po.poNo}</div>
+                            <div style="font-size:11px;color:#64748b;margin-top:2px;">🏭 ${po.supplier} • 💳 ${po.payTerms||'—'}</div>
+                            <div style="font-size:11px;color:#64748b;margin-top:1px;">📅 ${date}${po.delivDate?` • 🚚 ${new Date(po.delivDate).toLocaleDateString('en-GB',{day:'2-digit',month:'short'})}`:''}</div>
+                            <div style="font-size:14px;font-weight:900;color:${clr};margin-top:4px;">₹${(po.grand||0).toFixed(2)}</div>
+                        </div>
+                        <span style="font-size:10px;font-weight:700;color:${clr};background:${clr}18;border-radius:20px;padding:3px 9px;white-space:nowrap;">${statusLabels[po.status]||po.status}</span>
+                    </div>
+                    <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;">
+                        ${po.status!=='sent' ? `<button onclick="updatePoStatus(${realIdx},'sent')" style="background:#3b82f618;color:#2563eb;border:1px solid #3b82f644;border-radius:7px;padding:4px 10px;cursor:pointer;font-size:11px;font-weight:700;font-family:'Poppins',sans-serif;">📤 Mark Sent</button>` : ''}
+                        ${po.status!=='received' ? `<button onclick="updatePoStatus(${realIdx},'received')" style="background:#10b98118;color:#059669;border:1px solid #10b98144;border-radius:7px;padding:4px 10px;cursor:pointer;font-size:11px;font-weight:700;font-family:'Poppins',sans-serif;">✅ Mark Received</button>` : ''}
+                        ${po.status!=='pending' ? `<button onclick="updatePoStatus(${realIdx},'pending')" style="background:#f59e0b18;color:#b45309;border:1px solid #f59e0b44;border-radius:7px;padding:4px 10px;cursor:pointer;font-size:11px;font-weight:700;font-family:'Poppins',sans-serif;">↩ Revert Draft</button>` : ''}
+                        <button onclick="deletePoFromTracker(${realIdx})" style="background:#f43f5e14;color:#f43f5e;border:1px solid #f43f5e33;border-radius:7px;padding:4px 10px;cursor:pointer;font-size:11px;font-weight:700;font-family:'Poppins',sans-serif;">🗑️ Delete</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function updatePoStatus(idx, status) {
+            const arr = getPoTracker();
+            if (!arr[idx]) return;
+            arr[idx].status = status;
+            savePoTracker(arr);
+            renderPoTrackerList();
+            toast(`✅ PO status → ${status}`, 'success');
+        }
+
+        function deletePoFromTracker(idx) {
+            if (!confirm('Delete this PO from tracker?')) return;
+            const arr = getPoTracker();
+            arr.splice(idx, 1);
+            savePoTracker(arr);
+            renderPoTrackerList();
+            toast('🗑️ PO deleted', 'success');
+        }
+
+        // Auto-init PO view
+        (function initPOView() {
+            const check = setInterval(() => {
+                if (typeof switchView === 'function' && document.getElementById('po-buyerName')) {
+                    clearInterval(check);
+                    // Set today as default order date
+                    const dateEl = document.getElementById('po-orderDate');
+                    if (dateEl && !dateEl.value) dateEl.value = new Date().toISOString().split('T')[0];
+                    // Generate default PO number
+                    const poNoEl = document.getElementById('po-poNo');
+                    if (poNoEl && !poNoEl.value) poNoEl.value = 'PO-' + Date.now().toString().slice(-6);
+                    // Add first item row
+                    if (!document.querySelector('#poItemsList .po-item-row')) addPoItem();
+                    // Load pending badge
+                    const all = getPoTracker();
+                    const pendingCount = all.filter(p => p.status === 'pending').length;
+                    const badge = document.getElementById('po-pending-badge');
+                    if (badge && pendingCount > 0) { badge.style.display = 'block'; badge.textContent = pendingCount; }
+                }
+            }, 1000);
+        })();
+
+                function notifWatchOrders(snapDocs) {
             if (_prevOrderCount === null) { _prevOrderCount = snapDocs.length; return; }
             if (snapDocs.length > _prevOrderCount) {
                 const newest = snapDocs[0];
@@ -10772,6 +12047,15 @@ Powered by Order With Me ERP`);
             if (e.key === 'owm_qt_tracker') notifWatchQuotations();
         });
 
+        /* Auto-fill company code from localStorage */
+        (function autoFillCompanyCode() {
+            const saved = localStorage.getItem('owm_last_company');
+            if (saved) {
+                const el = document.getElementById('loginCompanyCode');
+                if (el) el.value = saved;
+            }
+        })();
+
         /* Seed a welcome notification on first load */
         (function seedWelcome() {
             const notifs = getNotifs();
@@ -10781,7 +12065,7 @@ Powered by Order With Me ERP`);
                     addNotif({
                         type: 'system', icon: '👋',
                         tag: 'System',
-                        title: 'Welcome to Order With Me!',
+                        title: 'Welcome to Order With Me®!',
                         body: 'Notification centre is active. Order, delivery, payment & quotation alerts will appear here.',
                         autoRead: true
                     });
