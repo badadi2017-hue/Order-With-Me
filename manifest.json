@@ -1,6 +1,6 @@
 {
   "name": "Order With Me - ERP",
-  "short_name": "OWM ERP",
+  "short_name": "Order With Me",
   "description": "Order With Me ERP - Orders, Billing & Business Management",
   "start_url": "./index.html",
   "scope": "./",
