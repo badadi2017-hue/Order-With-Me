@@ -1,7 +1,7 @@
 // ===== Order With Me® ERP - Service Worker =====
 // Bump this version string whenever you deploy a new build,
 // so old caches get cleared and users get the latest app shell.
-const CACHE_VERSION = 'owm-erp-v1';
+const CACHE_VERSION = 'owm-erp-v2';
 const CACHE_NAME = `order-with-me-${CACHE_VERSION}`;
 
 // App shell files to pre-cache for offline use.
